@@ -1,1 +1,146 @@
-hii
+BACKEND LAUNCH INSTRUCTIONS — PHASE 1
+
+Phase 1 uses two backend servers running on separate machines.
+
+Backend A — Mac 3 — Port 3001 Backend B — Mac 4 — Port 3002
+
+Both backends must be reachable over the LAN and must listen on 0.0.0.0.
+
+BACKEND A — MAC 3
+
+Navigate to the Backend A directory:
+
+cd ~/TeamX/backends/backend-a
+
+Install dependencies:
+
+npm install
+
+Start the server:
+
+node server.js
+
+Backend A must run on:
+
+0.0.0.0:3001
+
+Verify locally:
+
+curl -i http://localhost:3001/
+
+curl -i http://localhost:3001/api/status
+
+The response must contain:
+
+X-Backend: A
+
+BACKEND B — MAC 4
+
+Navigate to the Backend B directory:
+
+cd ~/TeamX/backends/backend-b
+
+Install dependencies:
+
+npm install
+
+Start the server:
+
+node server.js
+
+Backend B must run on:
+
+0.0.0.0:3002
+
+Verify locally:
+
+curl -i http://localhost:3002/
+
+curl -i http://localhost:3002/api/status
+
+The response must contain:
+
+X-Backend: B
+
+LAN CONNECTIVITY VERIFICATION
+
+The backends must be accessible from Mac 2, where the reverse proxy will
+run.
+
+Find Mac 3’s IP address:
+
+ipconfig getifaddr en0
+
+Find Mac 4’s IP address:
+
+ipconfig getifaddr en0
+
+If en0 is not the active Wi-Fi interface, identify the correct interface
+using:
+
+networksetup -listallhardwareports
+
+TEST BACKEND A FROM MAC 2
+
+Replace with the actual IP address of Mac 3:
+
+curl -i http://:3001/api/status
+
+Expected response header:
+
+X-Backend: A
+
+TEST BACKEND B FROM MAC 2
+
+Replace with the actual IP address of Mac 4:
+
+curl -i http://:3002/api/status
+
+Expected response header:
+
+X-Backend: B
+
+Successful responses confirm that Mac 2 can reach both backend servers
+over the LAN.
+
+BACKEND REQUIREMENTS
+
+Each backend must provide:
+
+-   GET /
+-   GET /api/status
+-   A backend-identification response header
+-   LAN-accessible listening address: 0.0.0.0
+
+Backend A: Port: 3001 Header: X-Backend: A Machine: Mac 3
+
+Backend B: Port: 3002 Header: X-Backend: B Machine: Mac 4
+
+STARTING THE PHASE 1 DEMONSTRATION
+
+Mac 3 — Backend A:
+
+cd ~/TeamX/backends/backend-a node server.js
+
+Mac 4 — Backend B:
+
+cd ~/TeamX/backends/backend-b node server.js
+
+Keep both processes running during the Phase 1 demonstration.
+
+Resulting setup:
+
+                  Mac 2
+              Reverse Proxy
+               /        \
+              /          \
+             v            v
+       Mac 3 :3001    Mac 4 :3002
+       Backend A      Backend B
+       X-Backend:A    X-Backend:B
+
+STOPPING THE BACKENDS
+
+To stop either backend, press:
+
+Ctrl + C
