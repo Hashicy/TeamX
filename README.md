@@ -1,142 +1,134 @@
-# TeamX — Computer Networks Project
-
-## Team Members
-
+TeamX — Computer Networks Project
+Team Members
 - Harshita Joshi
 - Manan Bansal
 - Soumya Tiwari
 - Niharika Choudhary
-
----
-
-# Phase 1 — Backend Setup
-
-Phase 1 uses two backend servers running on separate machines.
-
-| Backend | Machine | Port |
-|---|---|---:|
-| Backend A | Mac 3 | 3001 |
-| Backend B | Mac 4 | 3002 |
-
-Both backends must listen on `0.0.0.0` so that they can be accessed by other machines on the LAN.
-
----
-
-# Repository Structure
-
-```text
-TeamX/
-└── backends/
-    ├── backend-a/
-    │   ├── package.json
-    │   ├── package-lock.json
-    │   └── server.js
-    │
-    └── backend-b/
-        ├── .gitignore
-        ├── package.json
-        ├── package-lock.json
-        └── server.js
-
-Running Backend A — Mac 3
-Navigate to the Backend A directory:
-cd ~/TeamX/backends/backend-a
-
-Install dependencies:
-npm install
-
-Start the server:
-node server.js
-
-Backend A runs on:
-0.0.0.0:3001
-
-Test Backend A
-Test the root endpoint:
-curl -i http://localhost:3001/
-
-Test the status endpoint:
-curl -i http://localhost:3001/api/status
-
-The response should contain:
-X-Backend: A
-
-Running Backend B — Mac 4
-Navigate to the Backend B directory:
-cd ~/TeamX/backends/backend-b
-
-Install dependencies:
-npm install
-
-Start the server:
-node server.js
-
-Backend B runs on:
-0.0.0.0:3002
-
-Test Backend B
-Test the root endpoint:
-curl -i http://localhost:3002/
-
-Test the status endpoint:
-curl -i http://localhost:3002/api/status
-
-The response should contain:
-X-Backend: B
-
-LAN Connectivity
-The backends must be accessible from Mac 2.
-Find Backend A IP
-On Mac 3:
-ipconfig getifaddr en0
-
-Find Backend B IP
-On Mac 4:
-ipconfig getifaddr en0
-
-If en0 is not the active Wi-Fi interface, use:
-networksetup -listallhardwareports
-
-Test Backend A from Mac 2
-Replace <MAC3-IP> with the IP address of Mac 3:
-curl -i http://<MAC3-IP>:3001/api/status
-
-Expected header:
-X-Backend: A
-
-Test Backend B from Mac 2
-Replace <MAC4-IP> with the IP address of Mac 4:
-curl -i http://<MAC4-IP>:3002/api/status
-
-Expected header:
-X-Backend: B
-
-Successful responses confirm that Mac 2 can reach both backends over the LAN.
-Backend Requirements
+Phase 1
+Phase 1 implements the network architecture with:
+- Two backend servers
+- DNS configuration
+- Nginx reverse proxy/load balancing
+- HTTPS/TLS configuration
+- Network connectivity and verification
+- Evidence of successful requests and failure scenarios
+Project Structure
+Phase1/
+├── README.md
+├── Architecture/
+│   ├── ip-table.txt
+│   ├── topology.md
+│   ├── topology.mmd
+│   ├── topology-diagram.png
+│   ├── request-flow.md
+│   └── request-flow-diagram.png
+├── Configuration/
+│   ├── dnsmasq.conf
+│   ├── nginx.conf
+│   ├── TLS-notes.txt
+│   └── backend-launch-instructions.md
+├── Backends/
+│   ├── backend-a/
+│   │   └── server.py
+│   └── backend-b/
+│       └── server.py
+├── Evidence/
+│   ├── README.md
+│   ├── 01-ping.png
+│   ├── 02-dns.png
+│   ├── 03-backend-a-and-b.png
+│   ├── 04-https.png
+│   ├── 05-load-balancing.png
+│   ├── 06-dns-wireshark.png
+│   ├── 07-wireshark-tcp-tls-NOT-CAPTURED.png
+│   ├── 08-http-cache.png
+│   └── 09-failure-tests/
+│       ├── 01-wrong-dns-server.png
+│       ├── 02-wrong-dns-record.png
+│       ├── 03-one-backend-down.png
+│       ├── 04-both-backends-down.png
+│       └── 05-wrong-destination-port.png
+└── _submission_/
+    └── Backend-Source-Code.zip
+Architecture/
+Contains the network topology, IP/service table, request-flow documentation, and diagrams.
+Configuration/
+Contains:
+- dnsmasq.conf — DNS configuration
+- nginx.conf — Nginx configuration
+- TLS-notes.txt — TLS setup notes
+- backend-launch-instructions.md — Instructions for starting the backend servers
+Backends/
+Contains the source code for both backend servers:
+Backends/
+├── backend-a/
+│   └── server.py
+└── backend-b/
+    └── server.py
+Evidence/
+Contains screenshots and demonstrations of:
+- Network connectivity
+- DNS resolution
+- Backend availability
+- HTTPS
+- Load balancing
+- DNS packet capture
+- HTTP caching
+- Failure scenarios
+Running the Backends
+The project uses two Python backend servers.
 Backend A
-- Machine: Mac 3
-- Port: 3001
-- Listen address: 0.0.0.0
-- Endpoint: GET /
-- Endpoint: GET /api/status
-- Response header: X-Backend: A
+Navigate to the Backend A directory:
+cd Phase1/Backends/backend-a
+Start the server:
+python3 server.py
+Backend A should run on its assigned IP address and port as specified in:
+Phase1/Architecture/ip-table.txt
 Backend B
-- Machine: Mac 4
-- Port: 3002
-- Listen address: 0.0.0.0
-- Endpoint: GET /
-- Endpoint: GET /api/status
-- Response header: X-Backend: B
-Phase 1 Architecture
-                       Mac 2
-                  Reverse Proxy
-                    /       \
-                   /         \
-                  v           v
-           Mac 3 :3001   Mac 4 :3002
-           Backend A     Backend B
-           X-Backend:A   X-Backend:B
-
-Stopping the Backends
-To stop a running backend:
-Ctrl + C
+Navigate to the Backend B directory:
+cd Phase1/Backends/backend-b
+Start the server:
+python3 server.py
+Backend B should run on its assigned IP address and port as specified in:
+Phase1/Architecture/ip-table.txt
+Backend Verification
+After starting both servers, verify that they are reachable using curl.
+For Backend A:
+curl -i http://<BACKEND-A-IP>:<BACKEND-A-PORT>/
+For Backend B:
+curl -i http://<BACKEND-B-IP>:<BACKEND-B-PORT>/
+The exact IP addresses and ports are documented in:
+Architecture/ip-table.txt
+Network Architecture
+The general Phase 1 architecture is:
+                     Client
+                       |
+                       v
+                Nginx Reverse Proxy
+                       |
+                +------+------+
+                |             |
+                v             v
+          Backend A      Backend B
+The exact machine assignments, IP addresses, and service ports are documented in:
+Architecture/ip-table.txt
+Evidence
+The Evidence/ directory contains demonstrations of the Phase 1 requirements, including:
+- Ping/connectivity testing
+- DNS resolution
+- Backend A and Backend B availability
+- HTTPS
+- Load balancing
+- DNS packet capture
+- HTTP caching
+- Failure scenarios
+Failure scenarios include:
+- Wrong DNS server
+- Wrong DNS record
+- One backend unavailable
+- Both backends unavailable
+- Wrong destination port
+Submission
+The _submission_/ directory contains:
+Backend-Source-Code.zip
+which contains the backend source code submitted for the project.
