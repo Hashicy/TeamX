@@ -1,18 +1,30 @@
-TeamX — Computer Networks Project
-Team Members
+# TeamX: Computer Networks Project
+
+## Team Members
+
 - Harshita Joshi
 - Manan Bansal
 - Soumya Tiwari
 - Niharika Choudhary
-Phase 1
+
+---
+
+## Phase 1
+
 Phase 1 implements the network architecture with:
+
 - Two backend servers
 - DNS configuration
-- Nginx reverse proxy/load balancing
+- Nginx reverse proxy / load balancing
 - HTTPS/TLS configuration
 - Network connectivity and verification
 - Evidence of successful requests and failure scenarios
-Project Structure
+
+---
+
+## Project Structure
+
+```text
 Phase1/
 ├── README.md
 ├── Architecture/
@@ -50,70 +62,111 @@ Phase1/
 │       └── 05-wrong-destination-port.png
 └── _submission_/
     └── Backend-Source-Code.zip
-Architecture/
-Contains the network topology, IP/service table, request-flow documentation, and diagrams.
-Configuration/
-Contains:
-- dnsmasq.conf — DNS configuration
-- nginx.conf — Nginx configuration
-- TLS-notes.txt — TLS setup notes
-- backend-launch-instructions.md — Instructions for starting the backend servers
-Backends/
-Contains the source code for both backend servers:
-Backends/
-├── backend-a/
-│   └── server.py
-└── backend-b/
-    └── server.py
-Evidence/
-Contains screenshots and demonstrations of:
-- Network connectivity
-- DNS resolution
-- Backend availability
-- HTTPS
-- Load balancing
-- DNS packet capture
-- HTTP caching
-- Failure scenarios
-Running the Backends
-The project uses two Python backend servers.
-Backend A
+```
+
+---
+
+## Running the Backends
+
+Phase 1 uses two Python backend servers running on separate machines.
+The exact IP addresses and ports are documented in `Architecture/ip-table.txt`.
+
+### Backend A
+
 Navigate to the Backend A directory:
+
+```bash
 cd Phase1/Backends/backend-a
+```
+
 Start the server:
+
+```bash
 python3 server.py
-Backend A should run on its assigned IP address and port as specified in:
-Phase1/Architecture/ip-table.txt
-Backend B
-Navigate to the Backend B directory:
-cd Phase1/Backends/backend-b
-Start the server:
-python3 server.py
-Backend B should run on its assigned IP address and port as specified in:
-Phase1/Architecture/ip-table.txt
-Backend Verification
-After starting both servers, verify that they are reachable using curl.
-For Backend A:
+```
+
+Verify Backend A:
+
+```bash
 curl -i http://<BACKEND-A-IP>:<BACKEND-A-PORT>/
-For Backend B:
+```
+
+### Backend B
+
+Navigate to the Backend B directory:
+
+```bash
+cd Phase1/Backends/backend-b
+```
+
+Start the server:
+
+```bash
+python3 server.py
+```
+
+Verify Backend B:
+
+```bash
 curl -i http://<BACKEND-B-IP>:<BACKEND-B-PORT>/
-The exact IP addresses and ports are documented in:
-Architecture/ip-table.txt
-Network Architecture
-The general Phase 1 architecture is:
-                     Client
-                       |
-                       v
-                Nginx Reverse Proxy
-                       |
-                +------+------+
-                |             |
-                v             v
-          Backend A      Backend B
-The exact machine assignments, IP addresses, and service ports are documented in:
-Architecture/ip-table.txt
-Evidence
-The Evidence/ directory contains demonstrations of the Phase 1 requirements, including:
+```
+
+---
+
+## LAN Connectivity Verification
+
+The backend servers must be reachable from the machine running the Nginx reverse proxy.
+
+Find the IP address of a Mac:
+
+```bash
+ipconfig getifaddr en0
+```
+
+If `en0` is not the active network interface:
+
+```bash
+networksetup -listallhardwareports
+```
+
+Test Backend A:
+
+```bash
+curl -i http://<BACKEND-A-IP>:<BACKEND-A-PORT>/
+```
+
+Test Backend B:
+
+```bash
+curl -i http://<BACKEND-B-IP>:<BACKEND-B-PORT>/
+```
+
+Successful responses confirm that both backend servers are reachable over the LAN.
+
+---
+
+## Network Architecture
+
+```text
+Client
+  |
+  v
+Nginx Reverse Proxy
+  |
+  +----------------+
+  |                |
+  v                v
+Backend A       Backend B
+```
+
+The exact machine assignments, IP addresses, and service ports are documented in `Architecture/ip-table.txt`.
+
+---
+
+## Evidence
+
+The `Evidence/` directory contains demonstrations of the Phase 1 requirements:
+
 - Ping/connectivity testing
 - DNS resolution
 - Backend A and Backend B availability
@@ -122,13 +175,47 @@ The Evidence/ directory contains demonstrations of the Phase 1 requirements, inc
 - DNS packet capture
 - HTTP caching
 - Failure scenarios
-Failure scenarios include:
+
+---
+
+## Failure Scenarios
+
+The following failure scenarios are documented:
+
 - Wrong DNS server
 - Wrong DNS record
 - One backend unavailable
 - Both backends unavailable
 - Wrong destination port
-Submission
-The _submission_/ directory contains:
-Backend-Source-Code.zip
-which contains the backend source code submitted for the project.
+
+---
+
+## Stopping the Backends
+
+To stop a running backend server, press:
+
+```text
+Ctrl + C
+```
+
+---
+
+## Phase 1 Backend Checklist
+
+- [ ] Backend A starts successfully
+- [ ] Backend B starts successfully
+- [ ] Backend A is reachable using its configured IP and port
+- [ ] Backend B is reachable using its configured IP and port
+- [ ] Backend A responds successfully
+- [ ] Backend B responds successfully
+- [ ] The Nginx/client machine can reach Backend A
+- [ ] The Nginx/client machine can reach Backend B
+- [ ] IP addresses and ports match `Architecture/ip-table.txt`
+
+---
+
+## Submission
+
+The `_submission_` directory contains:
+
+- `Backend-Source-Code.zip`
