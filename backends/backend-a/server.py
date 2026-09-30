@@ -25,7 +25,7 @@ class Handler(BaseHTTPRequestHandler):
         elif self.path == "/api/status":
             self.send_json({
                 "backend": "A",
-                "status": "oh"
+                "status": "ok"
             })
 
         else:
