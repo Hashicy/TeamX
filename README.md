@@ -30,10 +30,7 @@ Phase1/
 ├── Architecture/
 │   ├── ip-table.txt
 │   ├── topology.md
-│   ├── topology.mmd
-│   ├── topology-diagram.png
 │   ├── request-flow.md
-│   └── request-flow-diagram.png
 ├── Configuration/
 │   ├── dnsmasq.conf
 │   ├── nginx.conf
@@ -202,15 +199,15 @@ Ctrl + C
 
 ## Phase 1 Backend Checklist
 
-- [ ] Backend A starts successfully
-- [ ] Backend B starts successfully
-- [ ] Backend A is reachable using its configured IP and port
-- [ ] Backend B is reachable using its configured IP and port
-- [ ] Backend A responds successfully
-- [ ] Backend B responds successfully
-- [ ] The Nginx/client machine can reach Backend A
-- [ ] The Nginx/client machine can reach Backend B
-- [ ] IP addresses and ports match `Architecture/ip-table.txt`
+- [X] Backend A starts successfully
+- [X] Backend B starts successfully
+- [X] Backend A is reachable using its configured IP and port
+- [X] Backend B is reachable using its configured IP and port
+- [X] Backend A responds successfully
+- [X] Backend B responds successfully
+- [X] The Nginx/client machine can reach Backend A
+- [X] The Nginx/client machine can reach Backend B
+- [X] IP addresses and ports match `Architecture/ip-table.txt`
 
 ---
 
