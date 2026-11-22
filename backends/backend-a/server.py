@@ -9,6 +9,7 @@ class Handler(BaseHTTPRequestHandler):
         self.send_response(status)
         self.send_header("Content-Type", "application/json")
         self.send_header("Content-Length", str(len(body)))
+        self.send_header("X-Backend", "A")
         self.send_header("Cache-Control", "max-age=60")
         self.end_headers()
 

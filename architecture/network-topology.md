@@ -1,7 +1,7 @@
 # Network Topology & Machine Roles (Phase 1)
 
 ## 1. System Overview
-This diagram illustrates our local network topology, showing the four machine roles, their connections, and their cloud-equivalent components[cite: 4, 5, 6].
+This diagram illustrates our local network topology, showing the four machine roles, their connections, and their cloud-equivalent components.
 
 ## 2. Machine Roles and IP/Service Table
 | Machine | Primary Role | Services Running | Cloud Equivalent |
@@ -11,7 +11,7 @@ This diagram illustrates our local network topology, showing the four machine ro
 | **Mac 3** | Backend Server A | Simple HTTP/REST application (port 3001) | Application server instance A |
 | **Mac 4** | Backend Server B + Test Client | Simple HTTP/REST application (port 3002), `curl`/browser | Application server instance B |
 
-*(Note: Data sourced from project guidelines[cite: 4])*
+*(Note: Data sourced from project guidelines)*
 
 ## 3. Network Topology Map
 ```text

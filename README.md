@@ -25,55 +25,55 @@ Phase 1 implements the network architecture with:
 ## Project Structure
 
 ```text
-Phase1/
+CN_Project/
 ├── README.md
-├── Architecture/
-│   ├── ip-table.txt
-│   ├── topology.md
-│   ├── request-flow.md
-├── Configuration/
+├── architecture/
+│   ├── ip_table.md
+│   ├── network-topology.md
+│   └── request_flow.md
+├── configuration/
 │   ├── dnsmasq.conf
-│   ├── nginx.conf
-│   ├── TLS-notes.txt
-│   └── backend-launch-instructions.md
-├── Backends/
+│   ├── nginx_config.conf
+│   ├── TLS-notes.md
+│   └── backend_launch_instruction.txt
+├── backends/
 │   ├── backend-a/
 │   │   └── server.py
 │   └── backend-b/
 │       └── server.py
-├── Evidence/
-│   ├── README.md
-│   ├── 01-ping.png
-│   ├── 02-dns.png
-│   ├── 03-backend-a-and-b.png
-│   ├── 04-https.png
-│   ├── 05-load-balancing.png
-│   ├── 06-dns-wireshark.png
-│   ├── 07-wireshark-tcp-tls-NOT-CAPTURED.png
-│   ├── 08-http-cache.png
-│   └── 09-failure-tests/
-│       ├── 01-wrong-dns-server.png
-│       ├── 02-wrong-dns-record.png
-│       ├── 03-one-backend-down.png
-│       ├── 04-both-backends-down.png
-│       └── 05-wrong-destination-port.png
-└── _submission_/
-    └── Backend-Source-Code.zip
+└── Evidences/
+    ├── 01-ping.png
+    ├── 02-dng.png
+    ├── 03-backend-a-and-b.png
+    ├── 04-https.png.jpeg
+    ├── 05-load-balancing.png
+    ├── 06-dns-wireshark-overview.png
+    ├── 06-dns-wireshark-query.png
+    ├── 06-dns-wireshark-response.png
+    ├── 07-wireshark-tcp-tls.png
+    ├── 08-http-wireshark.png
+    ├── 08-http-cache.png
+    └── 09-failure-tests/
+        ├── 01-wrong-dns-server.png
+        ├── 02-wrong-dns-record.png
+        ├── 03-one-backend-down.png
+        ├── 04-both-backends-down.png
+        └── 05-wrong-destination-port.png
 ```
 
 ---
 
 ## Running the Backends
 
-Phase 1 uses two Python backend servers running on separate machines.
-The exact IP addresses and ports are documented in `Architecture/ip-table.txt`.
+Phase 1 uses two backend servers running on separate machines: Backend A and Backend B, both written in Python.
+The exact IP addresses and ports are documented in `architecture/ip_table.md`.
 
 ### Backend A
 
 Navigate to the Backend A directory:
 
 ```bash
-cd Phase1/Backends/backend-a
+cd backends/backend-a
 ```
 
 Start the server:
@@ -93,7 +93,7 @@ curl -i http://<BACKEND-A-IP>:<BACKEND-A-PORT>/
 Navigate to the Backend B directory:
 
 ```bash
-cd Phase1/Backends/backend-b
+cd backends/backend-b
 ```
 
 Start the server:
@@ -156,13 +156,13 @@ Nginx Reverse Proxy
 Backend A       Backend B
 ```
 
-The exact machine assignments, IP addresses, and service ports are documented in `Architecture/ip-table.txt`.
+The exact machine assignments, IP addresses, and service ports are documented in `architecture/ip_table.md`.
 
 ---
 
 ## Evidence
 
-The `Evidence/` directory contains demonstrations of the Phase 1 requirements:
+The `Evidences/` directory contains demonstrations of the Phase 1 requirements:
 
 - Ping/connectivity testing
 - DNS resolution
@@ -170,6 +170,7 @@ The `Evidence/` directory contains demonstrations of the Phase 1 requirements:
 - HTTPS
 - Load balancing
 - DNS packet capture
+- TCP/TLS packet capture
 - HTTP caching
 - Failure scenarios
 
@@ -207,12 +208,4 @@ Ctrl + C
 - [X] Backend B responds successfully
 - [X] The Nginx/client machine can reach Backend A
 - [X] The Nginx/client machine can reach Backend B
-- [X] IP addresses and ports match `Architecture/ip-table.txt`
-
----
-
-## Submission
-
-The `_submission_` directory contains:
-
-- `Backend-Source-Code.zip`
+- [X] IP addresses and ports match `architecture/ip_table.md`
