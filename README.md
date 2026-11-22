@@ -22,6 +22,12 @@ Phase 1 implements the network architecture with:
 
 ---
 
+## Phase 2
+
+Phase 2 hardens the same network: backup DNS, DNS TTL, backend firewall isolation, HA failover, DNS-based edge migration, and a live troubleshooting challenge.
+
+---
+
 ## Project Structure
 
 ```text
@@ -35,7 +41,13 @@ CN_Project/
 │   ├── dnsmasq.conf
 │   ├── nginx_config.conf
 │   ├── TLS-notes.md
-│   └── backend_launch_instruction.txt
+│   ├── backend_launch_instruction.txt
+│   └── phase2/
+│       ├── dnsmasq-primary.conf
+│       ├── dnsmasq-backup.conf
+│       ├── nginx-phase2.conf
+│       ├── pf-isolation-mac3.conf
+│       └── pf-isolation-mac4.conf
 ├── backends/
 │   ├── backend-a/
 │   │   └── server.py
