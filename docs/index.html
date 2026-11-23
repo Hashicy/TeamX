@@ -1,0 +1,1280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Team X · Private Network Service Platform</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;1,9..144,300;1,9..144,400&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#060a14; --ink:#e9edf5; --mute:#8b95ab; --dim:#566077; --line:rgba(255,255,255,.08);
+  --dns:#f5b942; --tcp:#94a3b8; --tls:#b197fc; --http:#5fa8ff; --ok:#3ddc97; --bad:#ff6b6b; --warn:#ffb547; --acc:#5eead4;
+  --serif:'Fraunces',Georgia,'Times New Roman',serif; --sans:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);overflow:hidden;font-family:var(--sans);-webkit-font-smoothing:antialiased}
+#bg{position:fixed;inset:0;width:100%;height:100%}
+.vignette{position:fixed;inset:0;pointer-events:none;background:radial-gradient(ellipse at 50% 40%,transparent 40%,rgba(0,0,0,.55) 100%)}
+#deck{position:fixed;left:50%;top:50%;width:1600px;height:900px;transform-origin:center center}
+
+/* ---------- slides ---------- */
+.slide{position:absolute;inset:0;padding:64px 100px 0;opacity:0;visibility:hidden;
+  transform:translateY(16px) scale(.985);filter:blur(8px);
+  transition:opacity .6s ease,transform .8s cubic-bezier(.2,.8,.2,1),filter .6s ease,visibility 0s linear .6s}
+.slide.active{opacity:1;visibility:visible;transform:none;filter:none;transition-delay:0s}
+.rv{opacity:0}
+.slide.active .rv{animation:rise .9s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--d,0) * 1ms + 120ms)}
+@keyframes rise{from{opacity:0;transform:translateY(20px);filter:blur(5px)}to{opacity:1;transform:none;filter:none}}
+@keyframes fadein{from{opacity:0}to{opacity:1}}
+
+.eyebrow{font:500 14px/1 var(--mono);letter-spacing:.2em;text-transform:uppercase;color:var(--acc);display:flex;gap:14px;align-items:center}
+.eyebrow::before{content:'';width:34px;height:1px;background:var(--acc);opacity:.7}
+h1,h2{font-family:var(--serif);font-weight:300;letter-spacing:-.015em;margin:0}
+h2{font-size:56px;line-height:1.06;margin:16px 0 12px}
+h2 em,h1 em{font-style:italic;color:var(--acc);font-weight:300}
+.lede{font-size:20px;line-height:1.5;color:var(--mute);margin:0;max-width:1180px}
+.body{position:absolute;left:100px;right:100px;top:238px;bottom:84px;display:grid;gap:36px}
+.mono{font-family:var(--mono)}
+code{font-family:var(--mono);font-size:.92em;color:#cfe8ff;background:rgba(95,168,255,.08);padding:1px 6px;border-radius:5px}
+
+.panel{background:linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,.015));border:1px solid var(--line);border-radius:18px}
+.insight{border-left:2px solid var(--acc);padding:12px 18px;background:rgba(94,234,212,.05);border-radius:0 12px 12px 0;font-size:16.5px;line-height:1.5;color:#cdd5e3}
+.insight b{color:#fff;font-weight:600}
+
+/* terminal */
+.term{font:13.5px/1.62 var(--mono);background:#080d19;border:1px solid var(--line);border-radius:14px;padding:46px 18px 16px;position:relative;overflow:hidden}
+.term::before{content:'';position:absolute;left:16px;top:16px;width:11px;height:11px;border-radius:50%;background:#ff5f57;box-shadow:18px 0 0 #febc2e,36px 0 0 #28c840;opacity:.85}
+.term::after{content:attr(data-title);position:absolute;left:0;right:0;top:12px;text-align:center;font:500 12px var(--mono);color:var(--dim);letter-spacing:.06em}
+.tl{white-space:pre-wrap;word-break:break-word;color:#b9c3d6;animation:fadein .3s both}
+.tl.cmd{color:#fff}.tl.cmd::before{content:'$ ';color:var(--acc)}
+.tl.ok{color:var(--ok)}.tl.bad{color:var(--bad)}.tl.dim{color:var(--dim)}.tl.warn{color:var(--warn)}.tl.tls{color:var(--tls)}.tl.http{color:var(--http)}.tl.dns{color:var(--dns)}
+
+/* svg diagram */
+svg.dia{width:100%;height:100%;overflow:visible}
+.ninner{animation:pop .8s cubic-bezier(.2,.9,.3,1.15) both;animation-delay:var(--d,0ms);transform-box:fill-box;transform-origin:center}
+@keyframes pop{from{opacity:0;transform:scale(.86) translateY(8px)}to{opacity:1;transform:none}}
+.nbox{fill:#0b1221;stroke:var(--c);stroke-opacity:.55;stroke-width:1.4;transition:stroke .4s,fill .4s}
+.nbar{fill:var(--c)}
+.ntitle{fill:#f2f5fb;font:600 17px var(--sans)}
+.nsub{fill:#93a0b8;font:12.5px var(--mono)}
+.nrole{fill:var(--c);font:500 10.5px var(--mono);letter-spacing:.16em}
+.node.down .nbox{stroke:var(--bad);stroke-opacity:.95;fill:#1b0f16}
+.node.down .nbar{fill:var(--bad)} .node.down .ntitle{fill:#ffc2c2} .node.down .nsub{fill:#a07a86}
+.node.ghost{opacity:.35}
+.wire{stroke:rgba(200,214,240,.2);stroke-width:1.5;fill:none;stroke-dasharray:1;stroke-dashoffset:1;animation:draw 1.1s ease forwards;animation-delay:var(--d,0ms)}
+.wire.dash{stroke-dasharray:4 6;stroke-dashoffset:0;animation:fadein 1s both;animation-delay:var(--d,0ms)}
+.wire.secure{stroke:var(--tls);stroke-opacity:.75;stroke-width:2.6;filter:drop-shadow(0 0 6px rgba(177,151,252,.6))}
+@keyframes draw{to{stroke-dashoffset:0}}
+.pdot{fill:var(--c)}
+.plab{fill:var(--c);font:600 13px var(--mono);paint-order:stroke;stroke:#060a14;stroke-width:6px;stroke-linejoin:round}
+.chip rect{fill:#0e1628;stroke:currentColor;stroke-opacity:.8}
+.chip text{fill:currentColor;font:600 11px var(--mono);letter-spacing:.04em}
+.chip{animation:fadein .4s both}
+.chip.ok{color:var(--ok)}.chip.bad{color:var(--bad)}.chip.warn{color:var(--warn)}.chip.info{color:var(--tls)}.chip.dns{color:var(--dns)}
+.ftxt{font:600 14px var(--mono);paint-order:stroke;stroke:#060a14;stroke-width:6px}
+.lanlabel{fill:#56627a;font:500 12px var(--mono);letter-spacing:.12em}
+.mlab{font:500 13px var(--mono);paint-order:stroke;stroke:#060a14;stroke-width:5px}
+.cloud{fill:#6f7b94;font:italic 400 14px var(--serif)}
+
+/* chrome */
+.foot{position:absolute;left:100px;right:100px;bottom:30px;display:flex;justify-content:space-between;align-items:center;font:500 11.5px var(--mono);letter-spacing:.18em;text-transform:uppercase;color:var(--dim);pointer-events:none}
+.foot .sec{color:#7d889f}
+.progress{position:absolute;left:0;bottom:0;height:2px;background:linear-gradient(90deg,var(--acc),var(--tls));transition:width .6s cubic-bezier(.2,.8,.2,1)}
+.navbtn{position:fixed;bottom:18px;opacity:0;width:38px;height:38px;border-radius:50%;border:1px solid var(--line);background:rgba(10,16,30,.7);color:#9aa6bd;font-size:18px;cursor:pointer;z-index:5;backdrop-filter:blur(6px);transition:.2s}
+.navbtn:hover{color:#fff;border-color:rgba(255,255,255,.25)}
+body.mouse .navbtn{opacity:1}
+#prevB{right:66px}#nextB{right:20px}
+.hint{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);font:500 12px var(--mono);color:#7d889f;letter-spacing:.08em;background:rgba(10,16,30,.75);border:1px solid var(--line);padding:9px 16px;border-radius:30px;z-index:5;transition:opacity 1s}
+.hint kbd{font:inherit;color:#fff;border:1px solid #2a3348;border-radius:5px;padding:1px 6px;margin:0 2px}
+
+/* ---------- title ---------- */
+#s-title .wrap{display:grid;grid-template-columns:1fr 620px;height:100%;align-items:center;gap:40px;padding-bottom:60px}
+#s-title h1{font-size:92px;line-height:.98;margin:26px 0 26px}
+#s-title .lede{font-size:21px;max-width:720px}
+.team{display:grid;grid-template-columns:repeat(2,1fr);gap:12px 36px;margin-top:42px;max-width:720px}
+.team div{border-top:1px solid var(--line);padding-top:12px}
+.team b{display:block;font:500 17px var(--sans);color:#fff}
+.team span{font:12.5px var(--mono);color:var(--mute)}
+.phases{display:flex;gap:12px;margin-top:34px}
+.phases span{font:500 12.5px var(--mono);letter-spacing:.08em;padding:8px 14px;border:1px solid var(--line);border-radius:30px;color:#aab4c8}
+.phases span i{font-style:normal;color:var(--acc)}
+
+/* ---------- idea ---------- */
+.bar{display:flex;align-items:center;gap:14px;background:#0b1221;border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:16px 20px;font:500 22px var(--mono);color:#fff}
+.bar .lock{color:var(--ok);font-size:18px}
+.caret{display:inline-block;width:2px;height:24px;background:var(--acc);margin-left:2px;vertical-align:middle;animation:blink 1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+.ideaFlow{display:grid;grid-template-columns:1.25fr .9fr 1fr;gap:28px;align-items:center}
+.blackbox{border:1px dashed rgba(255,255,255,.18);border-radius:16px;padding:20px 22px;text-align:center}
+.blackbox .q{font:italic 300 22px var(--serif);color:#aab4c8;margin-bottom:14px}
+.ptags{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.ptag{font:600 12.5px var(--mono);padding:6px 11px;border-radius:8px;border:1px solid currentColor;opacity:.12;transform:scale(.9);transition:all .5s cubic-bezier(.2,.9,.3,1.3)}
+.ptag.on{opacity:1;transform:none}
+.resp{font:500 19px var(--mono);color:var(--ok);background:rgba(61,220,151,.06);border:1px solid rgba(61,220,151,.3);border-radius:14px;padding:18px 20px;opacity:0;transform:translateX(-12px);transition:all .7s cubic-bezier(.2,.8,.2,1)}
+.resp.show{opacity:1;transform:none}
+.resp small{display:block;color:var(--mute);font-size:12.5px;margin-top:6px}
+.cols3{display:grid;grid-template-columns:repeat(3,1fr);gap:26px}
+.col h3{font:500 13px var(--mono);letter-spacing:.2em;text-transform:uppercase;color:var(--acc);margin:0 0 12px}
+.col p{margin:0;font-size:17.5px;line-height:1.55;color:#c5cddc}
+.col{padding:24px 26px}
+.quote{font:italic 300 30px/1.3 var(--serif);color:#dfe5f0}
+.quote b{font-style:normal;font-weight:400;color:var(--acc)}
+
+/* ---------- topology ---------- */
+.svcmap{padding:26px 28px;display:flex;flex-direction:column;gap:6px}
+.svcmap h4{font:500 12px var(--mono);letter-spacing:.2em;text-transform:uppercase;color:var(--dim);margin:6px 0 8px}
+.kv{display:flex;justify-content:space-between;font:13.5px var(--mono);padding:7px 0;border-bottom:1px solid rgba(255,255,255,.05);color:#c4cddd}
+.kv span:last-child{color:#fff}
+.tagline{margin-top:auto;font:italic 300 22px/1.35 var(--serif);color:#c5cee0}
+
+/* ---------- journey ---------- */
+.steps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;counter-reset:s}
+.steps li{display:grid;grid-template-columns:34px 1fr;gap:12px;padding:10px 14px;border-radius:12px;border:1px solid transparent;color:#6c7790;transition:all .4s;counter-increment:s}
+.steps li::before{content:counter(s);width:28px;height:28px;border-radius:50%;border:1px solid #2b3449;display:grid;place-items:center;font:600 12px var(--mono);transition:all .4s}
+.steps li b{display:block;font:600 15.5px var(--sans);color:inherit}
+.steps li span{font:12.5px var(--mono);color:inherit;opacity:.85}
+.steps li.on{background:rgba(94,234,212,.06);border-color:rgba(94,234,212,.3);color:#fff}
+.steps li.on::before{background:var(--acc);color:#04201b;border-color:var(--acc)}
+.steps li.done{color:#9aa5ba}.steps li.done::before{border-color:var(--ok);color:var(--ok)}
+.clock{font:500 13px var(--mono);color:var(--mute);letter-spacing:.06em;display:flex;gap:10px;align-items:baseline}
+.clock b{font:500 34px var(--mono);color:#fff;letter-spacing:0}
+
+/* ---------- layers ---------- */
+.stack{display:flex;flex-direction:column;gap:10px}
+.lay{display:grid;grid-template-columns:76px 1fr;align-items:center;gap:16px;padding:14px 18px;border-radius:14px;border:1px solid var(--line);background:rgba(255,255,255,.02);transition:all .45s}
+.lay .n{font:600 13px var(--mono);color:var(--dim)}
+.lay b{display:block;font:600 17px var(--sans);color:#cfd6e4}
+.lay span{font:13px var(--mono);color:var(--mute)}
+.lay.on{border-color:var(--lc);background:color-mix(in srgb,var(--lc) 9%,transparent);transform:translateX(8px)}
+.lay.on .n,.lay.on b{color:var(--lc)}
+#pdu{display:flex;align-items:center;justify-content:center;height:100%}
+.pay{font:500 16px var(--mono);color:#e7ecf5;background:#0f182b;border:1px solid #2a3550;border-radius:10px;padding:14px 18px;white-space:nowrap}
+.pay.enc{color:var(--tls);border-color:rgba(177,151,252,.45);letter-spacing:.02em}
+.wrap{border:1.5px solid var(--lc);border-radius:16px;padding:10px 16px 16px;position:relative;background:color-mix(in srgb,var(--lc) 5%,transparent);animation:wrapin .7s cubic-bezier(.2,.9,.3,1.1) both}
+.wlab{font:600 12px var(--mono);color:var(--lc);white-space:nowrap;margin:0 0 10px 0}
+@keyframes wrapin{from{opacity:0;transform:scale(1.08)}to{opacity:1;transform:none}}
+.l-http{--lc:var(--http)}.l-tls{--lc:var(--tls)}.l-tcp{--lc:#7dd3fc}.l-ip{--lc:var(--dns)}.l-link{--lc:#f472b6}
+
+/* ---------- build ---------- */
+.cards4{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:22px}
+.bcard{padding:20px 24px;display:flex;flex-direction:column;gap:10px;position:relative;overflow:hidden}
+.bcard .top{display:flex;align-items:baseline;justify-content:space-between}
+.bcard h3{margin:0;font:500 24px var(--serif)}
+.bcard .who{font:500 11.5px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--c)}
+.bcard pre{margin:0;font:13px/1.65 var(--mono);color:#c9d3e6;background:#080d19;border:1px solid var(--line);border-radius:12px;padding:12px 16px;flex:1}
+.bcard pre>span{display:block;opacity:0}
+.slide.active .bcard pre>span{animation:rise .5s both;animation-delay:calc(var(--d,0)*1ms + var(--i)*110ms + 500ms)}
+.bcard pre .c{color:#5f6b84}
+.bcard .why{font-size:14.5px;color:var(--mute)}
+.bcard::before{content:'';position:absolute;left:0;top:18px;bottom:18px;width:3px;border-radius:2px;background:var(--c)}
+
+/* ---------- tls ---------- */
+.ws{font:12.5px/1.55 var(--mono)}
+.ws .r{display:grid;grid-template-columns:72px 1fr;padding:4px 8px;border-radius:6px;animation:fadein .35s both}
+.ws .r.tcp{background:rgba(148,163,184,.07)}.ws .r.tls{background:rgba(177,151,252,.09)}.ws .r.enc{background:rgba(177,151,252,.05);color:#9d8fd0}
+.ws .p{color:var(--mute)}
+.ws .x{color:#6d5fa3;letter-spacing:.04em}
+
+/* ---------- lb/cache ---------- */
+.tally{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
+.tally i{height:44px;border-radius:10px;border:1px dashed #2a3349;display:grid;place-items:center;font:600 18px var(--mono);font-style:normal;transition:all .3s}
+.tally i.a{border:1px solid var(--http);color:var(--http);background:rgba(95,168,255,.08)}
+.tally i.b{border:1px solid var(--acc);color:var(--acc);background:rgba(94,234,212,.08)}
+.crow{display:grid;grid-template-columns:190px 1fr;gap:18px;align-items:center;padding:16px 18px;border-radius:14px;border:1px solid var(--line);background:rgba(255,255,255,.02)}
+.crow b{display:block;font:600 16px var(--sans)}
+.crow small{font:12px var(--mono);color:var(--mute)}
+.track{position:relative;height:56px}
+.track .ln{position:absolute;left:30px;right:30px;top:27px;height:1px;background:#2a3349}
+.track .end{position:absolute;top:13px;width:30px;height:30px;border-radius:8px;border:1px solid #334059;display:grid;place-items:center;font:600 10px var(--mono);color:var(--mute)}
+.track .end.l{left:0}.track .end.r{right:0}
+.track .dot{position:absolute;top:21px;left:30px;width:12px;height:12px;border-radius:50%;background:var(--c);box-shadow:0 0 12px var(--c);opacity:0}
+.track .lab{position:absolute;top:0;left:46px;font:500 12px var(--mono);color:var(--c);opacity:0}
+.track .res{position:absolute;bottom:-2px;right:40px;font:600 12.5px var(--mono);color:var(--rc);opacity:0}
+.crow.go .dot.rt{animation:rt 1.5s cubic-bezier(.5,0,.5,1) both}
+.crow.go .dot.loc{animation:loc 1.4s ease both}
+.crow.go .lab{animation:fadein .4s .1s both}
+.crow.go .res{animation:rise .5s 1.1s both}
+@keyframes rt{0%{opacity:1;left:30px}48%{opacity:1;left:calc(100% - 42px)}52%{opacity:1;left:calc(100% - 42px)}100%{opacity:1;left:30px}}
+@keyframes loc{0%{opacity:0;transform:scale(.4)}30%{opacity:1;transform:scale(1.4)}100%{opacity:1;transform:scale(1)}}
+
+/* ---------- wireshark ---------- */
+.wsT{font:12.8px/1 var(--mono);border-radius:14px;overflow:hidden;border:1px solid var(--line)}
+.wsT .h,.wsT .wr{display:grid;grid-template-columns:120px 50px 90px 128px 128px 86px 1fr;align-items:center}
+.wsT .h{background:#121a2c;color:#8b95ab;font-weight:600;padding:10px 0}
+.wsT .h>*,.wsT .wr>*{padding:0 10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wsT .wr{padding:7.5px 0;opacity:0;transform:translateX(-10px);transition:opacity .35s,transform .35s,background .4s,color .4s;color:#aab3c5;border-top:1px solid rgba(255,255,255,.03)}
+.wsT .wr.show{opacity:1;transform:none}
+.wsT .wr .g{font:600 10.5px var(--mono);letter-spacing:.12em;color:var(--gc)}
+.wsT .wr[data-g=dns]{--gc:var(--dns)}.wsT .wr[data-g=tcp]{--gc:#cbd5e1}.wsT .wr[data-g=tls]{--gc:var(--tls)}.wsT .wr[data-g=app]{--gc:var(--http)}.wsT .wr[data-g=fin]{--gc:var(--bad)}
+.wsT .wr.hl{background:color-mix(in srgb,var(--gc) 13%,transparent);color:#fff}
+.wsT .wr:not(.hl).dimmed{opacity:.45}
+.wscap{display:grid;grid-template-columns:330px 1fr;gap:20px;align-items:center;padding:16px 22px}
+.wscap b{font:500 22px var(--serif);color:#fff}
+.wscap span{font-size:16px;color:#c3cbda;line-height:1.5}
+.facts{display:flex;gap:12px;flex-wrap:wrap}
+.facts span{font:500 12.5px var(--mono);color:#aeb8cb;border:1px solid var(--line);padding:7px 12px;border-radius:30px}
+.facts span b{color:#fff;font-weight:600}
+
+/* ---------- failures ---------- */
+.frow{display:grid;grid-template-columns:400px 1fr;gap:36px;align-items:center;padding:12px 22px;border-radius:14px;border:1px solid var(--line);background:rgba(255,255,255,.015)}
+.frow .ft b{font:600 17px var(--sans);display:block}
+.frow .ft span{font:12.5px var(--mono);color:var(--mute)}
+.ftrack{position:relative;display:flex;justify-content:space-between;align-items:center;height:46px}
+.ftrack::before{content:'';position:absolute;left:30px;right:30px;top:50%;height:1px;background:#273047}
+.stop{position:relative;z-index:1;font:600 11.5px var(--mono);padding:7px 0;width:86px;text-align:center;border-radius:9px;border:1px solid #2b3449;background:#0a1120;color:#6d7891;transition:all .35s}
+.stop.ok{border-color:rgba(61,220,151,.6);color:var(--ok)}
+.stop.bad{border-color:var(--bad);color:var(--bad);background:#22101a;box-shadow:0 0 18px rgba(255,107,107,.35)}
+.stop.warn{border-color:var(--warn);color:var(--warn);background:#24190a}
+.fdot{position:absolute;top:-4px;width:12px;height:12px;margin:0 0 0 -6px;border-radius:50%;background:#fff;box-shadow:0 0 14px #fff;z-index:2;opacity:0;transition:left .45s cubic-bezier(.5,0,.3,1),opacity .3s}
+.fmsg{font:500 13px var(--mono);margin-top:6px;opacity:0;transition:opacity .5s;color:var(--mc,#c3cbda)}
+.fmsg.show{opacity:1}
+
+/* ---------- phase 2 divider ---------- */
+#s-p2 .big{font:300 180px/0.9 var(--serif);letter-spacing:-.04em;color:#fff}
+#s-p2 .big em{color:var(--acc);font-style:italic}
+.exts{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:40px}
+.ext{padding:20px 22px}
+.ext .k{font:600 13px var(--mono);color:var(--acc);letter-spacing:.14em}
+.ext b{display:block;font:500 22px var(--serif);margin:6px 0 4px}
+.ext span{font-size:15px;color:var(--mute)}
+
+/* ---------- ext B ---------- */
+.bgrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px}
+.scard{padding:20px 22px}
+.scard h4{margin:0 0 10px;font:500 12px var(--mono);letter-spacing:.18em;text-transform:uppercase;color:var(--dim)}
+.scard .ip{font:600 30px var(--mono);color:#fff;transition:color .3s}
+.scard .ip.new{color:var(--dns)}.scard .ip.ok{color:var(--ok)}
+.scard .tag{display:inline-block;margin-top:10px;font:600 11.5px var(--mono);padding:5px 10px;border-radius:20px;border:1px solid currentColor;opacity:0;transition:opacity .3s}
+.scard .tag.show{opacity:1}
+.scard .tag.warn{color:var(--warn)}.scard .tag.ok{color:var(--ok)}
+.flashit{animation:flashk .7s ease}
+@keyframes flashk{0%{transform:scale(1.08);filter:brightness(1.8)}100%{transform:none;filter:none}}
+.ringwrap{display:flex;align-items:center;gap:26px;padding:20px 26px}
+.ringwrap .rt{font:600 26px var(--mono)}
+.ringwrap .rs{font:12.5px var(--mono);color:var(--mute);margin-top:4px}
+.tlist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.tlist li{display:grid;grid-template-columns:86px 1fr;gap:14px;font:13.5px var(--mono);padding:9px 14px;border-radius:10px;color:#5d6880;transition:all .35s;border:1px solid transparent}
+.tlist li.on{color:#fff;background:rgba(94,234,212,.06);border-color:rgba(94,234,212,.28)}
+.tlist li.done{color:#9ba6bb}
+.cmdline{font:13.5px var(--mono);color:#cbd3e2;background:#080d19;border:1px solid var(--line);border-radius:12px;padding:14px 16px;min-height:50px}
+.cmdline::before{content:'$ ';color:var(--acc)}
+
+/* ---------- ext F ---------- */
+.ladder{display:flex;flex-direction:column;gap:10px}
+.rung{display:grid;grid-template-columns:44px 140px 1fr 120px;align-items:center;gap:14px;padding:12px 18px;border-radius:13px;border:1px solid var(--line);background:rgba(255,255,255,.02);transition:all .35s}
+.rung .i{font:600 13px var(--mono);color:var(--dim)}
+.rung b{font:600 17px var(--sans)}
+.rung code{background:none;padding:0;color:#9fb0cc;font-size:12.5px}
+.rung .st{font:600 12px var(--mono);text-align:right;color:var(--dim)}
+.rung.chk{border-color:rgba(94,234,212,.45);background:rgba(94,234,212,.05)}
+.rung.ok .st{color:var(--ok)} .rung.ok{border-color:rgba(61,220,151,.3)}
+.rung.bad{border-color:var(--bad);background:rgba(255,107,107,.07);box-shadow:0 0 30px rgba(255,107,107,.12)} .rung.bad .st{color:var(--bad)}
+.rung.skip{opacity:.35}
+.faultbox{padding:24px 26px;display:flex;flex-direction:column;gap:14px}
+.faultbox .lbl{font:500 12px var(--mono);letter-spacing:.2em;text-transform:uppercase;color:var(--dim)}
+.faultbox .fname{font:400 30px var(--serif);color:#fff}
+.faultbox .verdict{font:500 15px var(--mono);color:var(--bad);opacity:0;transition:opacity .4s}
+.faultbox .verdict.show{opacity:1}
+
+/* ---------- results ---------- */
+.rgrid{display:grid;grid-template-columns:repeat(6,1fr);gap:14px}
+.rt{padding:16px 16px 14px;position:relative;overflow:hidden}
+.rt .k{font:600 12px var(--mono);color:var(--dim);letter-spacing:.12em}
+.rt b{display:block;font:500 16.5px var(--sans);margin:6px 0 10px;color:#e3e8f2;min-height:42px}
+.rt .pass{font:700 12px var(--mono);letter-spacing:.2em;color:var(--ok);border:1.5px solid var(--ok);display:inline-block;padding:4px 9px;border-radius:6px;transform:rotate(-6deg) scale(1.6);opacity:0}
+.slide.active .rt .pass{animation:stamp .45s cubic-bezier(.3,1.6,.5,1) both;animation-delay:calc(var(--d)*1ms + 700ms)}
+@keyframes stamp{to{opacity:1;transform:rotate(-6deg) scale(1)}}
+.stats{display:grid;grid-template-columns:repeat(5,1fr);gap:16px}
+.stat{padding:20px 22px}
+.stat .v{font:300 46px/1 var(--serif);color:#fff}
+.stat .v small{font-size:22px;color:var(--mute)}
+.stat .d{font:12.5px var(--mono);color:var(--mute);margin-top:10px;line-height:1.5}
+
+/* ---------- learn ---------- */
+.lessons{display:flex;flex-direction:column;gap:12px}
+.lesson{display:grid;grid-template-columns:42px 1fr;gap:14px;padding:16px 20px}
+.lesson .n{font:italic 300 30px/1 var(--serif);color:var(--acc)}
+.lesson b{display:block;font:500 19px var(--serif);color:#fff;margin-bottom:3px}
+.lesson span{font-size:15px;color:var(--mute);line-height:1.45}
+.spcap{font:italic 300 21px var(--serif);color:#cfd7e6;text-align:center;min-height:30px;transition:opacity .4s}
+
+/* ---------- end ---------- */
+#s-end{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding-bottom:80px}
+#s-end h1{font-size:140px;line-height:1}
+#s-end .lede{margin:20px auto 0;text-align:center}
+#s-end .team{grid-template-columns:repeat(4,1fr);max-width:1150px;margin-top:60px;text-align:left}
+</style>
+</head>
+<body>
+<canvas id="bg"></canvas>
+<div class="vignette"></div>
+
+<div id="deck">
+
+<!-- ===================== 1. TITLE ===================== -->
+<section class="slide" id="s-title" data-sec="Team X">
+  <div class="wrap">
+    <div>
+      <div class="eyebrow rv">Computer Networks · Course Project</div>
+      <h1 class="rv" style="--d:120">Private Network<br><em>Service Platform</em></h1>
+      <p class="lede rv" style="--d:260">From a typed name to a JSON reply: private DNS, TCP, TLS&nbsp;1.3, HTTP/2 and load balancing, built by hand on four MacBooks and then made to survive failures.</p>
+      <div class="team rv" style="--d:420">
+        <div><b>Manan Bansal</b><span>Mac 1 · DNS + client</span></div>
+        <div><b>Harshita Joshi</b><span>Mac 2 · Edge · nginx + TLS</span></div>
+        <div><b>Soumya Tiwari</b><span>Mac 3 · Backend A · standby edge</span></div>
+        <div><b>Niharika Choudhary</b><span>Mac 4 · Backend B · backup DNS</span></div>
+      </div>
+      <div class="phases rv" style="--d:560"><span><i>Phase 1</i> · Build &amp; Observe</span><span><i>Phase 2</i> · Harden &amp; Recover</span></div>
+    </div>
+    <div class="rv" style="height:600px;--d:300"><svg class="dia" id="svgTitle" viewBox="0 0 640 560"></svg></div>
+  </div>
+</section>
+
+<!-- ===================== 2. IDEA ===================== -->
+<section class="slide" id="s-idea" data-sec="The idea">
+  <div class="eyebrow rv">01 · The idea</div>
+  <h2 class="rv" style="--d:80">Type a name. Get an answer.<br><em>Own every hop in between.</em></h2>
+  <div class="body" style="grid-template-rows:auto auto 1fr;top:300px;gap:34px">
+    <div class="ideaFlow rv" style="--d:250">
+      <div class="bar"><span class="lock">●</span><span id="ideaUrl"></span><span class="caret"></span></div>
+      <div class="blackbox" id="ideaBox">
+        <div class="q">what happens in these ~350 ms?</div>
+        <div class="ptags">
+          <span class="ptag" style="color:var(--dns)">DNS</span><span class="ptag" style="color:var(--tcp)">TCP</span><span class="ptag" style="color:var(--tls)">TLS 1.3</span><span class="ptag" style="color:var(--http)">HTTP/2</span><span class="ptag" style="color:var(--acc)">Load balancer</span><span class="ptag" style="color:var(--ok)">Cache</span>
+        </div>
+      </div>
+      <div class="resp" id="ideaOut">{"backend": "A", "status": "ok"}<small>HTTP/2 200 · x-backend: A · x-edge: mac2</small></div>
+    </div>
+    <div class="quote rv" style="--d:400">“The application stays simple. <b>The network is the project.</b>”</div>
+    <div class="cols3">
+      <div class="col panel rv" style="--d:520"><h3>What</h3><p>A private service at <code>app.teamX.test</code> that exists only on our Wi-Fi: our own DNS, our own certificate authority, our own load balancer.</p></div>
+      <div class="col panel rv" style="--d:620"><h3>How</h3><p>Four Macs, each standing in for a cloud service: <b>dnsmasq</b> as Route&nbsp;53, <b>nginx</b> as the load balancer, two small <b>Python</b> REST backends.</p></div>
+      <div class="col panel rv" style="--d:720"><h3>Why</h3><p>To prove every layer with <b>dig, curl and Wireshark</b>, break it on purpose, then make it survive DNS, backend and edge failures.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== 3. TOPOLOGY ===================== -->
+<section class="slide" id="s-topo" data-sec="Topology">
+  <div class="eyebrow rv">02 · Topology</div>
+  <h2 class="rv" style="--d:80">Four MacBooks, <em>one private network</em></h2>
+  <p class="lede rv" style="--d:160">Each laptop plays the role a cloud service would. No VMs, no cloud: just the Wi-Fi we are sitting on.</p>
+  <div class="body" style="grid-template-columns:1fr 420px">
+    <div><svg class="dia" id="svgTopo" viewBox="0 0 960 600"></svg></div>
+    <div class="panel svcmap rv" style="--d:400">
+      <h4>Service map</h4>
+      <div class="kv"><span>app.teamX.test</span><span>→ 10.7.4.179</span></div>
+      <div class="kv"><span>api.teamX.test</span><span>→ 10.7.4.179</span></div>
+      <div class="kv"><span>DNS · Mac 1 / Mac 4</span><span>udp/53</span></div>
+      <div class="kv"><span>Edge · Mac 2</span><span>tcp/443</span></div>
+      <div class="kv"><span>Backend A · Mac 3</span><span>tcp/3001</span></div>
+      <div class="kv"><span>Backend B · Mac 4</span><span>tcp/3002</span></div>
+      <div class="kv"><span>Subnet · gateway</span><span>/19 · 10.7.0.1</span></div>
+      <div class="tagline">Clients only ever know <em style="color:var(--acc)">one name</em>. They never learn a backend's address.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== 4. JOURNEY ===================== -->
+<section class="slide" id="s-journey" data-sec="Request journey">
+  <div class="eyebrow rv">03 · Request journey</div>
+  <h2 class="rv" style="--d:80">One request, <em>seven steps</em></h2>
+  <p class="lede rv" style="--d:160">Timings are taken from our real packet capture of a single <code>curl https://app.teamX.test/api/status</code>.</p>
+  <div class="body" style="grid-template-columns:1fr 430px;top:250px">
+    <div style="position:relative"><svg class="dia" id="svgJourney" viewBox="0 0 960 560"></svg>
+      <div class="clock" style="position:absolute;left:10px;bottom:0">t =<b id="jClock">0.0</b>ms since the DNS query</div></div>
+    <ol class="steps rv" style="--d:300" id="jSteps">
+      <li><div><b>DNS lookup</b><span>A? app.teamX.test → 10.7.4.179 · udp/53</span></div></li>
+      <li><div><b>TCP three-way handshake</b><span>SYN · SYN-ACK · ACK · 58446 → 443</span></div></li>
+      <li><div><b>TLS 1.3 handshake</b><span>ClientHello (SNI, ALPN h2) · ServerHello</span></div></li>
+      <li><div><b>Encrypted request</b><span>GET /api/status over HTTP/2</span></div></li>
+      <li><div><b>TLS terminates at nginx</b><span>decrypt · pick backend round-robin</span></div></li>
+      <li><div><b>Backend answers</b><span>JSON + X-Backend · ETag · Cache-Control</span></div></li>
+      <li><div><b>Back to the client</b><span>re-encrypted · X-Edge: mac2</span></div></li>
+    </ol>
+  </div>
+</section>
+
+<!-- ===================== 5. LAYERS ===================== -->
+<section class="slide" id="s-layers" data-sec="Protocol layers">
+  <div class="eyebrow rv">04 · Protocol layers</div>
+  <h2 class="rv" style="--d:80">Where each protocol <em>lives</em></h2>
+  <p class="lede rv" style="--d:160">On the way out, every layer wraps the one above it. Here is our response from nginx being built, layer by layer.</p>
+  <div class="body" style="grid-template-columns:520px 1fr">
+    <div class="stack rv" style="--d:260" id="stack">
+      <div class="lay l-http"><span class="n">L7</span><div><b>Application</b><span>DNS · HTTP/2 · REST / JSON</span></div></div>
+      <div class="lay l-tls"><span class="n">L5–6</span><div><b>Session / Presentation</b><span>TLS 1.3 · mkcert certificate</span></div></div>
+      <div class="lay l-tcp"><span class="n">L4</span><div><b>Transport</b><span>UDP 53 · TCP 443 / 3001 / 3002</span></div></div>
+      <div class="lay l-ip"><span class="n">L3</span><div><b>Network</b><span>IPv4 · 10.7.0.0/19</span></div></div>
+      <div class="lay l-link"><span class="n">L2</span><div><b>Link</b><span>Wi-Fi 802.11 · MAC addresses</span></div></div>
+    </div>
+    <div class="panel" style="position:relative"><div id="pdu"></div>
+      <div class="mono" style="position:absolute;left:24px;bottom:18px;font-size:12.5px;color:var(--dim)">DNS takes the same path with UDP instead of TCP, and no TLS.</div></div>
+  </div>
+</section>
+
+<!-- ===================== 6. BUILD ===================== -->
+<section class="slide" id="s-build" data-sec="How we built it">
+  <div class="eyebrow rv">05 · How we built it</div>
+  <h2 class="rv" style="--d:80">Four small configs, <em>one working platform</em></h2>
+  <p class="lede rv" style="--d:160">Off-the-shelf tools configured by hand: dnsmasq, nginx and mkcert, plus about 60 lines of standard-library Python per backend.</p>
+  <div class="body cards4" style="top:256px">
+    <div class="bcard panel rv" style="--c:var(--dns);--d:250"><div class="top"><h3>Private DNS</h3><span class="who">Mac 1 · dnsmasq</span></div>
+<pre data-lines>listen-address=10.7.31.159
+address=/app.teamX.test/10.7.4.179
+address=/api.teamX.test/10.7.4.179
+local-ttl=30            <span class="c"># Phase 1 was 0</span>
+server=8.8.8.8          <span class="c"># everything else → public DNS</span></pre>
+      <div class="why">Names in the reserved <code>.test</code> zone. <code>.local</code> would collide with macOS mDNS.</div></div>
+    <div class="bcard panel rv" style="--c:var(--tls);--d:350"><div class="top"><h3>Edge &amp; load balancer</h3><span class="who">Mac 2 · nginx</span></div>
+<pre data-lines>upstream backend_cluster {
+  server 10.7.28.230:3001 max_fails=1 fail_timeout=10s;
+  server 10.7.15.199:3002 max_fails=1 fail_timeout=10s;
+}
+listen 443 ssl;  http2 on;
+proxy_next_upstream error timeout http_502;</pre>
+      <div class="why">Single entry point. Terminates TLS, then load-balances round-robin over plain HTTP.</div></div>
+    <div class="bcard panel rv" style="--c:var(--ok);--d:450"><div class="top"><h3>Certificates</h3><span class="who">Mac 2 · mkcert CA</span></div>
+<pre data-lines>mkcert -install                  <span class="c"># our own root CA</span>
+mkcert -cert-file app.teamX.test.pem \
+       -key-file  app.teamX.test-key.pem \
+       app.teamX.test api.teamX.test
+curl --cacert rootCA.pem https://app.teamX.test  <span class="c"># never -k</span></pre>
+      <div class="why">Every client trusts our root CA, so the certificate verifies for real.</div></div>
+    <div class="bcard panel rv" style="--c:var(--http);--d:550"><div class="top"><h3>Two REST backends</h3><span class="who">Mac 3 · Mac 4 · Python</span></div>
+<pre data-lines>GET /           → {"backend":"A","status":"running"}
+GET /api/status → {"backend":"A","status":"ok"}
+X-Backend: A   ETag: "d208bfa2f0ed4859"
+Cache-Control: max-age=60
+If-None-Match matches → 304 Not Modified</pre>
+      <div class="why">Bound to <code>0.0.0.0</code> so the edge can reach them across the LAN.</div></div>
+  </div>
+</section>
+
+<!-- ===================== 7. TLS ===================== -->
+<section class="slide" id="s-tls" data-sec="HTTPS / TLS">
+  <div class="eyebrow rv">06 · HTTPS</div>
+  <h2 class="rv" style="--d:80">The TLS 1.3 handshake, <em>packet by packet</em></h2>
+  <p class="lede rv" style="--d:160">TLS terminates at the edge. Clients verify the certificate against our own root CA. Nothing in the demo uses <code>-k</code>.</p>
+  <div class="body" style="grid-template-columns:1fr 470px;gap:30px">
+    <div><svg class="dia" id="svgTLS" viewBox="0 0 900 600"></svg></div>
+    <div style="display:grid;grid-template-rows:1fr auto;gap:16px">
+      <div class="term ws" data-title="what Wireshark sees" id="tlsWire"></div>
+      <div class="term" data-title="curl -v sees" id="tlsCurl" style="min-height:190px"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== 8. LB + CACHE ===================== -->
+<section class="slide" id="s-lb" data-sec="Load balancing & caching">
+  <div class="eyebrow rv">07 · Load balancing &amp; caching</div>
+  <h2 class="rv" style="--d:80">Spread the load, <em>skip the bytes</em></h2>
+  <p class="lede rv" style="--d:160">Round-robin alternates A and B. HTTP caching decides whether a request is needed at all.</p>
+  <div class="body" style="grid-template-columns:1fr 1fr;gap:44px">
+    <div style="display:grid;grid-template-rows:1fr auto auto;gap:14px">
+      <svg class="dia" id="svgLB" viewBox="0 0 660 400"></svg>
+      <div class="mono" style="font-size:12px;color:var(--dim);letter-spacing:.14em">SIX REQUESTS · X-BACKEND HEADER</div>
+      <div class="tally" id="lbTally"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:14px" id="cache">
+      <div class="crow rv" style="--d:300;--c:var(--ok);--rc:var(--ok)"><div><b>Fresh hit</b><small>age &lt; max-age=60</small></div>
+        <div class="track"><div class="ln" style="opacity:.25"></div><div class="end l">YOU</div><div class="end r">EDGE</div><div class="dot loc"></div><div class="lab">served from local cache</div><div class="res">0 bytes on the wire</div></div></div>
+      <div class="crow rv" style="--d:400;--c:var(--warn);--rc:var(--warn)"><div><b>Conditional</b><small>cache expired, ETag kept</small></div>
+        <div class="track"><div class="ln"></div><div class="end l">YOU</div><div class="end r">EDGE</div><div class="dot rt"></div><div class="lab">If-None-Match: "3b7d18aba8a10926"</div><div class="res">304 Not Modified · no body</div></div></div>
+      <div class="crow rv" style="--d:500;--c:var(--http);--rc:var(--http)"><div><b>Full request</b><small>no copy / tag mismatch</small></div>
+        <div class="track"><div class="ln"></div><div class="end l">YOU</div><div class="end r">EDGE</div><div class="dot rt"></div><div class="lab">GET /api/status</div><div class="res">200 OK · 32 B JSON + new ETag</div></div></div>
+      <div class="insight rv" style="--d:650"><b>What we found:</b> each backend generates its own ETag, so with round-robin the <b>304</b> comes only from the backend that issued the tag. The other backend answers <b>200</b>. Behind a load balancer, validators must be shared.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== 9. WIRESHARK ===================== -->
+<section class="slide" id="s-wire" data-sec="Packet evidence">
+  <div class="eyebrow rv">08 · Packet evidence</div>
+  <h2 class="rv" style="--d:80">What <em>Wireshark</em> saw</h2>
+  <p class="lede rv" style="--d:160">One <code>curl</code> request from Mac 1, captured end to end in <code>p1-09-full-request.pcap</code>. In this capture, Mac 2 held its morning address, 10.7.8.191.</p>
+  <div class="body" style="grid-template-rows:auto auto auto;gap:18px;top:250px">
+    <div class="wsT rv" style="--d:250" id="ws">
+      <div class="h"><span>Phase</span><span>No.</span><span>Time</span><span>Source</span><span>Destination</span><span>Protocol</span><span>Info</span></div>
+      <div class="wr" data-g="dns"><span class="g">DNS</span><span>1</span><span>0.000000</span><span>10.7.31.159</span><span>10.7.15.199</span><span>DNS</span><span>Standard query 0x65d8 A app.teamX.test</span></div>
+      <div class="wr" data-g="dns"><span class="g"></span><span>2</span><span>0.073662</span><span>10.7.15.199</span><span>10.7.31.159</span><span>DNS</span><span>Standard query response 0x65d8 A app.teamX.test A 10.7.8.191</span></div>
+      <div class="wr" data-g="tcp"><span class="g">TCP</span><span>3</span><span>0.109463</span><span>10.7.31.159</span><span>10.7.8.191</span><span>TCP</span><span>58446 → 443 [SYN] Seq=0 Win=65535 MSS=1460 SACK_PERM</span></div>
+      <div class="wr" data-g="tcp"><span class="g"></span><span>4</span><span>0.173859</span><span>10.7.8.191</span><span>10.7.31.159</span><span>TCP</span><span>443 → 58446 [SYN, ACK] Seq=0 Ack=1 MSS=1460</span></div>
+      <div class="wr" data-g="tcp"><span class="g"></span><span>5</span><span>0.174099</span><span>10.7.31.159</span><span>10.7.8.191</span><span>TCP</span><span>58446 → 443 [ACK] Seq=1 Ack=1</span></div>
+      <div class="wr" data-g="tls"><span class="g">TLS</span><span>6</span><span>0.174703</span><span>10.7.31.159</span><span>10.7.8.191</span><span>TLSv1.3</span><span>Client Hello (SNI=app.teamx.test)</span></div>
+      <div class="wr" data-g="tls"><span class="g"></span><span>9</span><span>0.184621</span><span>10.7.8.191</span><span>10.7.31.159</span><span>TLSv1.3</span><span>Server Hello, Change Cipher Spec, Application Data, Application Data</span></div>
+      <div class="wr" data-g="tls"><span class="g"></span><span>12</span><span>0.186620</span><span>10.7.31.159</span><span>10.7.8.191</span><span>TLSv1.3</span><span>Change Cipher Spec</span></div>
+      <div class="wr" data-g="app"><span class="g">HTTP/2</span><span>13</span><span>0.186780</span><span>10.7.31.159</span><span>10.7.8.191</span><span>TLSv1.3</span><span>Application Data</span></div>
+      <div class="wr" data-g="app"><span class="g"></span><span>18</span><span>0.194635</span><span>10.7.8.191</span><span>10.7.31.159</span><span>TLSv1.3</span><span>Application Data</span></div>
+      <div class="wr" data-g="app"><span class="g"></span><span>25</span><span>0.351691</span><span>10.7.8.191</span><span>10.7.31.159</span><span>TLSv1.3</span><span>Application Data</span></div>
+      <div class="wr" data-g="fin"><span class="g">CLOSE</span><span>28</span><span>0.355344</span><span>10.7.31.159</span><span>10.7.8.191</span><span>TCP</span><span>58446 → 443 [FIN, ACK] Seq=600 Ack=2555</span></div>
+    </div>
+    <div class="panel wscap rv" style="--d:400" id="wsCap"><b>&nbsp;</b><span>&nbsp;</span></div>
+    <div class="facts rv" style="--d:500">
+      <span>Ephemeral ports <b>52723</b> (DNS) · <b>58446</b> (HTTPS)</span>
+      <span>Well-known <b>53/udp</b> · <b>443/tcp</b></span>
+      <span>ISN <b>950382347</b> → acked <b>950382348</b></span>
+      <span>Socket pair <b>10.7.31.159:58446 ↔ 10.7.8.191:443</b></span>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== 10. FAILURES ===================== -->
+<section class="slide" id="s-fail" data-sec="Phase 1 failures">
+  <div class="eyebrow rv">09 · Break it on purpose</div>
+  <h2 class="rv" style="--d:80">Five failures, <em>five different places</em></h2>
+  <p class="lede rv" style="--d:160">Each fault stops the request at a different point. Knowing <i>where</i> it stops is how you find it.</p>
+  <div class="body" style="grid-template-rows:repeat(5,1fr);gap:12px;top:250px" id="fails">
+    <div class="frow rv" style="--d:250" data-path="bad" data-msg="NXDOMAIN from 8.8.8.8, yet ping 10.7.4.179 still works" data-mc="var(--bad)">
+      <div class="ft"><b>Wrong DNS server on the client</b><span>DNS and IP are independent</span></div><div><div class="ftrack"></div><div class="fmsg"></div></div></div>
+    <div class="frow rv" style="--d:320" data-path="warn" data-msg="NOERROR, answer 10.7.12.123 (Mac 4). Resolves fine, to the wrong machine" data-mc="var(--warn)">
+      <div class="ft"><b>DNS record points to a wrong IP</b><span>DNS is a directory, not a connection</span></div><div><div class="ftrack"></div><div class="fmsg"></div></div></div>
+    <div class="frow rv" style="--d:390" data-path="ok,ok,ok,ok,ok,warn" data-msg="A refuses → nginx uses B → 200 OK, X-Backend: B" data-mc="var(--warn)">
+      <div class="ft"><b>One backend stopped</b><span>the edge routes around it</span></div><div><div class="ftrack"></div><div class="fmsg"></div></div></div>
+    <div class="frow rv" style="--d:460" data-path="ok,ok,ok,ok,ok,bad" data-msg="DNS ✓ TCP ✓ TLS ✓, then 502 Bad Gateway from nginx" data-mc="var(--bad)">
+      <div class="ft"><b>Both backends stopped</b><span>where the edge ends, the backend begins</span></div><div><div class="ftrack"></div><div class="fmsg"></div></div></div>
+    <div class="frow rv" style="--d:530" data-path="ok,ok,bad" data-msg="Host up, nothing on :3999 → TCP RST, refused in 3 ms" data-mc="var(--bad)">
+      <div class="ft"><b>Wrong destination port</b><span>IP and port are separate identifiers</span></div><div><div class="ftrack"></div><div class="fmsg"></div></div></div>
+  </div>
+</section>
+
+<!-- ===================== 11. PHASE 2 ===================== -->
+<section class="slide" id="s-p2" data-sec="Phase 2">
+  <div class="eyebrow rv">Phase 2</div>
+  <div class="big rv" style="--d:100;margin-top:28px">Harden. <em>Recover.</em></div>
+  <p class="lede rv" style="--d:220;margin-top:24px;font-size:22px">Same network, no rebuild. We made it more resilient, more secure and easier to diagnose, then tested every claim on 23 November.</p>
+  <div class="exts">
+    <div class="ext panel rv" style="--d:340"><span class="k">EXT A</span><b>Backup DNS</b><span>A second resolver on Mac 4</span></div>
+    <div class="ext panel rv" style="--d:410"><span class="k">EXT B</span><b>TTL &amp; record change</b><span>30 s TTL, controlled change</span></div>
+    <div class="ext panel rv" style="--d:480"><span class="k">EXT C</span><b>Service isolation</b><span>pf: only the edge reaches backends</span></div>
+    <div class="ext panel rv" style="--d:550"><span class="k">EXT D</span><b>HA failover</b><span>nginx detects, retries, recovers</span></div>
+    <div class="ext panel rv" style="--d:620"><span class="k">EXT E</span><b>Edge migration</b><span>DNS cutover to a standby nginx</span></div>
+    <div class="ext panel rv" style="--d:690"><span class="k">EXT F</span><b>Troubleshooting</b><span>Layer-by-layer diagnosis</span></div>
+  </div>
+</section>
+
+<!-- ===================== 12. EXT A ===================== -->
+<section class="slide" id="s-extA" data-sec="Ext A · Backup DNS">
+  <div class="eyebrow rv">Ext A · Backup DNS</div>
+  <h2 class="rv" style="--d:80">Kill the DNS server. <em>Keep the name.</em></h2>
+  <p class="lede rv" style="--d:160">Every client lists two resolvers: Mac 1 first, then Mac 4 with identical records.</p>
+  <div class="body" style="grid-template-columns:1fr 520px">
+    <div style="display:grid;grid-template-rows:1fr auto;gap:14px">
+      <svg class="dia" id="svgA" viewBox="0 0 900 470"></svg>
+      <div class="insight rv" style="--d:500"><b>DNS failure:</b> the <i>name</i> disappears while hosts are still reachable by IP. <b>Application failure:</b> the name resolves, but the service errors (502, refused).</div>
+    </div>
+    <div class="term" data-title="Mac 1 · zsh" id="termA"></div>
+  </div>
+</section>
+
+<!-- ===================== 13. EXT B ===================== -->
+<section class="slide" id="s-extB" data-sec="Ext B · TTL">
+  <div class="eyebrow rv">Ext B · TTL &amp; controlled change</div>
+  <h2 class="rv" style="--d:80">A cached answer <em>outlives the change</em></h2>
+  <p class="lede rv" style="--d:160">TTL went from 0 to 30 seconds. We changed the record and watched the client keep the old answer. Time is sped up; the clock shows the real timestamps.</p>
+  <div class="body" style="grid-template-columns:1fr 440px">
+    <div style="display:flex;flex-direction:column;gap:18px">
+      <div class="bgrid rv" style="--d:250">
+        <div class="scard panel"><h4>Primary DNS · Mac 1</h4><div class="ip" id="bPri">10.7.4.179</div></div>
+        <div class="scard panel"><h4>Backup DNS · Mac 4</h4><div class="ip" id="bBak">10.7.4.179</div></div>
+        <div class="scard panel"><h4>Client cache · Mac 1</h4><div class="ip" id="bCli">-</div><span class="tag" id="bTag"></span></div>
+      </div>
+      <div class="panel ringwrap rv" style="--d:350">
+        <svg width="120" height="120" viewBox="0 0 120 120"><circle cx="60" cy="60" r="50" fill="none" stroke="#1d2638" stroke-width="8"/><circle id="bRing" cx="60" cy="60" r="50" fill="none" stroke="#5eead4" stroke-width="8" stroke-linecap="round" stroke-dasharray="314.16" stroke-dashoffset="0" transform="rotate(-90 60 60)"/></svg>
+        <div><div class="rt" id="bRingT">TTL 30 s</div><div class="rs" id="bRingS">time left on the client's cached answer</div></div>
+        <div style="margin-left:auto;text-align:right"><div class="rs">IST</div><div class="rt" id="bClock">12:57:53</div></div>
+      </div>
+      <div class="cmdline rv" style="--d:420" id="bCmd"></div>
+      <div class="insight rv" style="--d:500">The client switched after <b>≈43 s</b> against a <b>30 s</b> TTL. A TTL is the <b>minimum</b> time an old answer may live, not a deadline. For a migration: lower the TTL first, cut over, wait, then raise it again.</div>
+    </div>
+    <ul class="tlist rv" style="--d:300" id="bTL">
+      <li><span>12:57:53</span><span>dig shows TTL 30</span></li>
+      <li><span>12:58:19</span><span>client resolves and caches 10.7.4.179</span></li>
+      <li><span>12:58:22</span><span>both servers → 10.7.28.230</span></li>
+      <li><span>12:59:02</span><span>client finally switches (≈43 s)</span></li>
+      <li><span>12:59:22</span><span>records reverted → 10.7.4.179</span></li>
+      <li><span>12:59:22</span><span>manual flush → change visible instantly</span></li>
+    </ul>
+  </div>
+</section>
+
+<!-- ===================== 14. EXT C ===================== -->
+<section class="slide" id="s-extC" data-sec="Ext C · Isolation">
+  <div class="eyebrow rv">Ext C · Service isolation</div>
+  <h2 class="rv" style="--d:80">Only the edge <em>may knock</em></h2>
+  <p class="lede rv" style="--d:160">macOS <code>pf</code> rules on Mac 3 and Mac 4 accept connections to 3001/3002 from 10.7.4.179 only. Everyone else gets an instant TCP reset.</p>
+  <div class="body" style="grid-template-columns:1fr 520px">
+    <div style="display:grid;grid-template-rows:1fr auto;gap:14px">
+      <svg class="dia" id="svgC" viewBox="0 0 900 470"></svg>
+      <div class="insight rv" style="--d:500">Least privilege at the transport layer, the same idea as <b>private subnets + security groups</b>. TLS, logging and load balancing can no longer be bypassed. The rollback was planned <b>before</b> the rules went on.</div>
+    </div>
+    <div class="term" data-title="pf · Mac 1 · Mac 2" id="termC"></div>
+  </div>
+</section>
+
+<!-- ===================== 15. EXT D ===================== -->
+<section class="slide" id="s-extD" data-sec="Ext D · Failover">
+  <div class="eyebrow rv">Ext D · High-availability failover</div>
+  <h2 class="rv" style="--d:80">Lose a backend, <em>lose no requests</em></h2>
+  <p class="lede rv" style="--d:160"><code>max_fails=1 fail_timeout=10s</code> detects the failure; <code>proxy_next_upstream</code> retries the same request on the healthy backend.</p>
+  <div class="body" style="grid-template-columns:1fr 540px">
+    <svg class="dia" id="svgD" viewBox="0 0 880 520"></svg>
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div class="mono" style="font-size:12px;color:var(--dim);letter-spacing:.14em">BOTH UP</div><div class="tally" id="dT0"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+      <div class="mono" style="font-size:12px;color:var(--dim);letter-spacing:.14em">BACKEND A STOPPED</div><div class="tally" id="dT1"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+      <div class="mono" style="font-size:12px;color:var(--dim);letter-spacing:.14em">BACKEND A RESTARTED</div><div class="tally" id="dT2"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+      <div class="term" data-title="Mac 2 · nginx error.log" id="termD" style="flex:1;min-height:150px"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== 16. EXT E ===================== -->
+<section class="slide" id="s-extE" data-sec="Ext E · Edge migration">
+  <div class="eyebrow rv">Ext E · DNS-based edge migration</div>
+  <h2 class="rv" style="--d:80">Move the edge <em>with DNS alone</em></h2>
+  <p class="lede rv" style="--d:160">A standby nginx on Mac 3 with the same config and certificate. We changed one DNS record; the <code>X-Edge</code> header shows who answered.</p>
+  <div class="body" style="grid-template-columns:1fr 430px">
+    <svg class="dia" id="svgE" viewBox="0 0 900 560"></svg>
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <ul class="tlist rv" style="--d:300" id="eTL">
+        <li><span>13:09:56</span><span>standby tested with --resolve → mac3</span></li>
+        <li><span>13:10:20</span><span>Mac 1 → X-Edge: mac2</span></li>
+        <li><span>13:10:23</span><span>record → 10.7.28.230 · Mac 1 cached → mac2</span></li>
+        <li><span>13:10:37</span><span>Mac 4 (fresh) → X-Edge: mac3</span></li>
+        <li><span>13:11:15</span><span>Mac 1 cache expires → mac3</span></li>
+        <li><span>13:11:53</span><span>cut back → mac2</span></li>
+      </ul>
+      <div class="insight rv" style="--d:450">For about one TTL, <b>two edges serve at the same time</b>. Users notice nothing because both edges are identical and stateless. That is why production migrations keep the old edge running until its traffic drains.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== 17. EXT F ===================== -->
+<section class="slide" id="s-extF" data-sec="Ext F · Troubleshooting">
+  <div class="eyebrow rv">Ext F · Faculty-injected fault</div>
+  <h2 class="rv" style="--d:80">Diagnose in the order <em>the packet travels</em></h2>
+  <p class="lede rv" style="--d:160">Check each layer, say the result out loud, and stop at the first one that fails, because every layer after it depends on it.</p>
+  <div class="body" style="grid-template-columns:1fr 430px">
+    <div class="ladder rv" style="--d:250" id="ladder">
+      <div class="rung"><span class="i">01</span><b>DNS</b><code>scutil --dns · dig app.teamX.test · dig @each server</code><span class="st">·</span></div>
+      <div class="rung"><span class="i">02</span><b>IP</b><code>ping 10.7.4.179 · arp -a</code><span class="st">·</span></div>
+      <div class="rung"><span class="i">03</span><b>TCP</b><code>nc -vz 10.7.4.179 443 · lsof -iTCP:443</code><span class="st">·</span></div>
+      <div class="rung"><span class="i">04</span><b>TLS</b><code>openssl s_client -connect …:443 -servername app.teamX.test</code><span class="st">·</span></div>
+      <div class="rung"><span class="i">05</span><b>HTTP / edge</b><code>curl -v · nginx -t · error.log</code><span class="st">·</span></div>
+      <div class="rung"><span class="i">06</span><b>Backend</b><code>curl :3001 / :3002 from Mac 2</code><span class="st">·</span></div>
+    </div>
+    <div class="panel faultbox rv" style="--d:350">
+      <div class="lbl">Example fault</div>
+      <div class="fname" id="fName">…</div>
+      <div class="term" data-title="diagnosis" id="termF" style="min-height:220px"></div>
+      <div class="verdict" id="fVerdict"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== 18. RESULTS ===================== -->
+<section class="slide" id="s-results" data-sec="Results">
+  <div class="eyebrow rv">Results</div>
+  <h2 class="rv" style="--d:80">Everything we set out to <em>prove</em></h2>
+  <p class="lede rv" style="--d:160">Every Phase 1 task was re-verified on the Phase 2 network, then each extension was tested live. Evidence for each is in <code>Evidences/phase2/mac1…mac4</code>.</p>
+  <div class="body" style="grid-template-rows:auto auto 1fr;gap:16px;top:250px">
+    <div class="rgrid">
+      <div class="rt panel rv" style="--d:200"><span class="k">TASK A</span><b>Private LAN, 12/12 pings</b><span class="pass">PASS</span></div>
+      <div class="rt panel rv" style="--d:250"><span class="k">TASK B</span><b>Private DNS on 3 clients</b><span class="pass">PASS</span></div>
+      <div class="rt panel rv" style="--d:300"><span class="k">TASK C</span><b>Two REST backends</b><span class="pass">PASS</span></div>
+      <div class="rt panel rv" style="--d:350"><span class="k">TASK D</span><b>Reverse proxy + round-robin</b><span class="pass">PASS</span></div>
+      <div class="rt panel rv" style="--d:400"><span class="k">TASK E</span><b>TLS 1.3, verified, HTTP/2</b><span class="pass">PASS</span></div>
+      <div class="rt panel rv" style="--d:450"><span class="k">TASK F</span><b>Cache-Control, ETag, 304</b><span class="pass">PASS</span></div>
+    </div>
+    <div class="rgrid">
+      <div class="rt panel rv" style="--d:500"><span class="k">TASK G</span><b>Full-request packet capture</b><span class="pass">PASS</span></div>
+      <div class="rt panel rv" style="--d:550"><span class="k">EXT A</span><b>Backup DNS takes over</b><span class="pass">PASS</span></div>
+      <div class="rt panel rv" style="--d:600"><span class="k">EXT B</span><b>TTL &amp; flush observed</b><span class="pass">PASS</span></div>
+      <div class="rt panel rv" style="--d:650"><span class="k">EXT C</span><b>pf isolation + rollback</b><span class="pass">PASS</span></div>
+      <div class="rt panel rv" style="--d:700"><span class="k">EXT D</span><b>Failover, 18/18 OK</b><span class="pass">PASS</span></div>
+      <div class="rt panel rv" style="--d:750"><span class="k">EXT E</span><b>DNS cutover &amp; cut back</b><span class="pass">PASS</span></div>
+    </div>
+    <div class="stats">
+      <div class="stat panel rv" style="--d:900"><div class="v">0<small>%</small></div><div class="d">packet loss across all 12 Mac-to-Mac ping pairs</div></div>
+      <div class="stat panel rv" style="--d:980"><div class="v">~350<small> ms</small></div><div class="d">DNS → TCP → TLS → response, one request</div></div>
+      <div class="stat panel rv" style="--d:1060"><div class="v">18<small>/18</small></div><div class="d">requests answered 200 while Backend A was down and recovering</div></div>
+      <div class="stat panel rv" style="--d:1140"><div class="v">43<small> s</small></div><div class="d">real cache lifetime vs a 30 s TTL</div></div>
+      <div class="stat panel rv" style="--d:1220"><div class="v">0</div><div class="d">firewall rules left after rollback on both backends</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== 19. LEARN ===================== -->
+<section class="slide" id="s-learn" data-sec="Takeaways">
+  <div class="eyebrow rv">Takeaways</div>
+  <h2 class="rv" style="--d:80">What's still fragile, <em>and what we learned</em></h2>
+  <div class="body" style="grid-template-columns:1fr 600px;top:200px">
+    <div style="display:grid;grid-template-rows:1fr auto;gap:10px">
+      <svg class="dia" id="svgSPOF" viewBox="0 0 800 520"></svg>
+      <div class="spcap" id="spCap"></div>
+    </div>
+    <div class="lessons">
+      <div class="lesson panel rv" style="--d:250"><span class="n">i</span><div><b>DNS is a directory, not a connection.</b><span>A correct lookup can still send you to the wrong place.</span></div></div>
+      <div class="lesson panel rv" style="--d:330"><span class="n">ii</span><div><b>A TTL is a minimum, not a deadline.</b><span>Plan migrations around the slowest cache.</span></div></div>
+      <div class="lesson panel rv" style="--d:410"><span class="n">iii</span><div><b>Failover = detection + retry.</b><span>Marking a backend down is not enough; the failed request has to be retried.</span></div></div>
+      <div class="lesson panel rv" style="--d:490"><span class="n">iv</span><div><b>Isolate by default, keep a rollback.</b><span>Only the edge talks to backends, and every rule change is reversible.</span></div></div>
+      <div class="lesson panel rv" style="--d:570"><span class="n">v</span><div><b>Debug in the order the packet travels.</b><span>dig → ping → nc → openssl → curl → logs.</span></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== 20. END ===================== -->
+<section class="slide" id="s-end" data-sec="Thank you">
+  <div class="eyebrow rv">Team X · Computer Networks</div>
+  <h1 class="rv" style="--d:120;margin-top:28px">Thank <em>you.</em></h1>
+  <p class="lede rv" style="--d:260">Questions about any layer are welcome: DNS, TCP, TLS, HTTP, the edge or the backends.</p>
+  <div class="team rv" style="--d:400">
+    <div><b>Manan Bansal</b><span>Mac 1 · DNS + client</span></div>
+    <div><b>Harshita Joshi</b><span>Mac 2 · Edge · nginx + TLS</span></div>
+    <div><b>Soumya Tiwari</b><span>Mac 3 · Backend A · standby edge</span></div>
+    <div><b>Niharika Choudhary</b><span>Mac 4 · Backend B · backup DNS</span></div>
+  </div>
+</section>
+
+<div class="foot"><span>Team X · Private Network Service Platform</span><span><span class="sec" id="fSec"></span> &nbsp;·&nbsp; <span id="fNum"></span></span></div>
+<div class="progress" id="prog"></div>
+</div>
+
+<button class="navbtn" id="prevB" aria-label="Previous">‹</button>
+<button class="navbtn" id="nextB" aria-label="Next">›</button>
+<div class="hint" id="hint"><kbd>→</kbd>/<kbd>Space</kbd> next · <kbd>←</kbd> back · <kbd>R</kbd> replay · <kbd>F</kbd> fullscreen</div>
+
+<script>
+/* =================================================================
+   Core helpers
+   ================================================================= */
+const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
+const NS='http://www.w3.org/2000/svg';
+const C={dns:'#f5b942',tcp:'#94a3b8',tls:'#b197fc',http:'#5fa8ff',ok:'#3ddc97',bad:'#ff6b6b',warn:'#ffb547',acc:'#5eead4',ink:'#e9edf5'};
+let TOKEN=0; const STOP=Symbol('stop');
+const w=(ms,T)=>new Promise((res,rej)=>setTimeout(()=>T===TOKEN?res():rej(STOP),ms));
+function E(tag,attrs={},parent){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(parent)parent.appendChild(e);return e;}
+function tx(p,x,y,s,cls,anchor){const t=E('text',{x,y},p);if(cls)t.setAttribute('class',cls);if(anchor)t.setAttribute('text-anchor',anchor);t.textContent=s;return t;}
+function div(cls,txt){const d=document.createElement('div');if(cls)d.className=cls;if(txt!=null)d.textContent=txt;return d;}
+
+/* ---------- diagram scaffold ---------- */
+function stage(svg){
+  svg.innerHTML='';const d=E('defs',{},svg);const id=svg.id+'-glow';
+  const f=E('filter',{id,x:'-100%',y:'-100%',width:'300%',height:'300%'},d);
+  E('feGaussianBlur',{stdDeviation:'4',result:'b'},f);const m=E('feMerge',{},f);E('feMergeNode',{in:'b'},m);E('feMergeNode',{in:'SourceGraphic'},m);
+  return {svg,glow:`url(#${id})`,bg:E('g',{},svg),wires:E('g',{},svg),nodes:E('g',{},svg),pk:E('g',{},svg),fx:E('g',{},svg)};
+}
+function node(L,o){
+  const wd=o.w||210,h=o.h||(o.sub&&o.sub.length>1?92:74);
+  const g=E('g',{class:'node'},L.nodes);g.setAttribute('transform',`translate(${o.x} ${o.y})`);
+  g.style.setProperty('--c',o.c||C.acc);
+  Object.assign(g,{_x:o.x,_y:o.y,_w:wd,_h:h});
+  const inner=E('g',{class:'ninner'},g);inner.style.setProperty('--d',(o.d||0)+'ms');
+  E('rect',{x:-wd/2,y:-h/2,width:wd,height:h,rx:14,class:'nbox'},inner);
+  E('rect',{x:-wd/2+1,y:-h/2+14,width:3,height:h-28,rx:1.5,class:'nbar'},inner);
+  if(o.role)tx(inner,-wd/2+2,-h/2-11,o.role,'nrole');
+  tx(inner,-wd/2+20,-h/2+30,o.t,'ntitle');
+  g._subs=(o.sub||[]).map((s,i)=>tx(inner,-wd/2+20,-h/2+53+i*20,s,'nsub'));
+  g._inner=inner;return g;
+}
+function ep(a,b,pad=6){const dx=b._x-a._x,dy=b._y-a._y;const sx=(a._w/2+pad)/Math.abs(dx),sy=(a._h/2+pad)/Math.abs(dy);const s=Math.min(sx,sy);return [a._x+dx*s,a._y+dy*s];}
+function wire(L,a,b,o={}){
+  const [x1,y1]=ep(a,b,3),[x2,y2]=ep(b,a,3);
+  const at={x1,y1,x2,y2,class:'wire'+(o.dash?' dash':'')};if(!o.dash)at.pathLength=1;
+  const l=E('line',at,L.wires);l.style.setProperty('--d',(o.d||0)+'ms');if(o.c)l.style.stroke=o.c;return l;
+}
+function chip(n,text,kind='info'){
+  if(n._chip){n._chip.remove();n._chip=null}if(!text)return;
+  const g=E('g',{class:'chip '+kind},n);const wd=text.length*7.2+20;const x=n._w/2-wd+10,y=-n._h/2-13;
+  E('rect',{x,y,width:wd,height:24,rx:12},g);tx(g,x+wd/2,y+16,text,'','middle');n._chip=g;
+}
+function setSub(n,i,s){const t=n._subs[i];t.textContent=s;t.animate([{opacity:0,transform:'translateY(6px)'},{opacity:1,transform:'none'}],{duration:500,easing:'ease-out'});t.style.fill=C.dns;setTimeout(()=>t.style.fill='',1600);}
+function down(n,b){n.classList.toggle('down',b);}
+function pulse(L,n,c){const ci=E('circle',{cx:n._x,cy:n._y,r:60,fill:'none',stroke:c,'stroke-width':2},L.fx);ci.style.transformOrigin=`${n._x}px ${n._y}px`;
+  ci.animate([{transform:'scale(.6)',opacity:.9},{transform:'scale(2.1)',opacity:0}],{duration:1100,easing:'ease-out'}).finished.then(()=>ci.remove());}
+function floatTxt(L,x,y,s,c){const t=tx(L.fx,x,y,s,'ftxt','middle');t.style.fill=c;
+  t.animate([{opacity:0,transform:'translateY(6px)'},{opacity:1,transform:'none',offset:.2},{opacity:1,offset:.8},{opacity:0,transform:'translateY(-10px)'}],{duration:1800,fill:'forwards'}).finished.then(()=>t.remove());}
+
+async function flyPts(L,T,p1,p2,o={}){
+  const c=o.c||C.http,dur=o.dur||850;
+  const g=E('g',{class:'pkt'},L.pk);g.style.setProperty('--c',c);
+  E('circle',{r:o.r||7,class:'pdot',filter:L.glow},g);
+  if(o.label){const t=tx(g,0,-15,o.label,'plab','middle');}
+  const an=g.animate([{transform:`translate(${p1[0]}px,${p1[1]}px)`},{transform:`translate(${p2[0]}px,${p2[1]}px)`}],{duration:dur,easing:o.ease||'cubic-bezier(.45,.05,.35,1)',fill:'forwards'});
+  await an.finished.catch(()=>{});
+  if(T!==TOKEN){g.remove();throw STOP}
+  if(!o.keep){g.animate([{opacity:1},{opacity:0}],{duration:260,fill:'forwards'}).finished.then(()=>g.remove());}
+  return g;
+}
+function lanePts(a,b,lane){let [x1,y1]=ep(a,b),[x2,y2]=ep(b,a);if(lane){const dx=x2-x1,dy=y2-y1,l=Math.hypot(dx,dy);const nx=-dy/l*lane,ny=dx/l*lane;x1+=nx;y1+=ny;x2+=nx;y2+=ny;}return [[x1,y1],[x2,y2]];}
+function fly(L,T,a,b,o={}){let [p1,p2]=lanePts(a,b,o.lane||0);if(o.stopAt!=null)p2=[p1[0]+(p2[0]-p1[0])*o.stopAt,p1[1]+(p2[1]-p1[1])*o.stopAt];return flyPts(L,T,p1,p2,o);}
+async function bounce(L,T,a,b,k,o={}){const [p1,p2]=lanePts(a,b,o.lane||0);const pm=[p1[0]+(p2[0]-p1[0])*k,p1[1]+(p2[1]-p1[1])*k];
+  await flyPts(L,T,p1,pm,{...o,ease:'cubic-bezier(.5,0,.9,.6)'});floatTxt(L,pm[0],pm[1]-24,o.hit||'✕',o.hitc||C.bad);
+  await flyPts(L,T,pm,p1,{c:o.backc||C.bad,label:o.back||'RST',dur:(o.dur||850)*.8});return pm;}
+
+/* ---------- terminal ---------- */
+function Term(el,T,max=15){el.innerHTML='';const trim=()=>{while(el.children.length>max)el.firstChild.remove()};
+  return{async cmd(s,sp=14){const d=div('tl cmd');el.append(d);for(let i=1;i<=s.length;i+=2){d.textContent=s.slice(0,i);await w(sp,T)}d.textContent=s;trim();await w(180,T)},
+         out(s,c=''){const d=div('tl '+c,s);el.append(d);trim();return d},
+         gap(){el.append(div('tl',' '));trim()}};}
+
+/* =================================================================
+   Slide plays
+   ================================================================= */
+const PLAY={};
+
+/* ---- title ---- */
+PLAY['s-title']=async T=>{
+  const L=stage($('#svgTitle'));
+  const m1=node(L,{x:320,y:80,w:220,t:'Mac 1',sub:['DNS · client'],c:C.dns,d:400,role:'ROUTE 53'});
+  const m2=node(L,{x:320,y:280,w:220,t:'Mac 2',sub:['nginx · TLS · LB'],c:C.tls,d:600,role:'LOAD BALANCER'});
+  const m3=node(L,{x:140,y:475,w:220,t:'Mac 3',sub:['Backend A :3001'],c:C.http,d:800,role:'APP SERVER A'});
+  const m4=node(L,{x:500,y:475,w:220,t:'Mac 4',sub:['Backend B :3002'],c:C.http,d:950,role:'APP SERVER B'});
+  wire(L,m1,m2,{d:1000});wire(L,m2,m3,{d:1150});wire(L,m2,m4,{d:1250});
+  await w(2000,T);
+  for(let k=0;;k++){const b=k%2?m4:m3,n=k%2?'B':'A';
+    await fly(L,T,m1,m2,{c:C.tls,label:'🔒 HTTPS',dur:900});
+    await fly(L,T,m2,b,{c:C.http,label:'GET',dur:650});
+    await fly(L,T,b,m2,{c:C.ok,label:n,dur:650});
+    await fly(L,T,m2,m1,{c:C.ok,label:'200',dur:900});
+    await w(400,T);}
+};
+
+/* ---- idea ---- */
+PLAY['s-idea']=async T=>{
+  const url=$('#ideaUrl'),out=$('#ideaOut'),tags=$$('#ideaBox .ptag');
+  url.textContent='';out.classList.remove('show');tags.forEach(t=>t.classList.remove('on'));
+  await w(1100,T);const s='https://app.teamX.test/api/status';
+  for(let i=1;i<=s.length;i++){url.textContent=s.slice(0,i);await w(42,T)}
+  await w(350,T);for(const t of tags){t.classList.add('on');await w(320,T)}
+  await w(300,T);out.classList.add('show');
+};
+
+/* ---- topology ---- */
+PLAY['s-topo']=async T=>{
+  const L=stage($('#svgTopo'));
+  E('rect',{x:20,y:20,width:920,height:560,rx:26,fill:'rgba(255,255,255,.012)',stroke:'rgba(255,255,255,.1)','stroke-dasharray':'3 7'},L.bg);
+  tx(L.bg,46,52,'PRIVATE WI-FI LAN · 10.7.0.0/19','lanlabel');
+  const ap=node(L,{x:800,y:110,w:200,h:70,t:'Wi-Fi AP',sub:['gateway 10.7.0.1'],c:'#64748b',d:100});
+  const m1=node(L,{x:200,y:140,w:250,t:'Mac 1 · Manan',sub:['Primary DNS · dnsmasq','10.7.31.159 · udp/53'],c:C.dns,role:'DNS SERVER + CLIENT',d:300});
+  const m2=node(L,{x:480,y:300,w:250,t:'Mac 2 · Harshita',sub:['Edge · nginx + TLS','10.7.4.179 · tcp/443'],c:C.tls,role:'REVERSE PROXY · LB',d:600});
+  const m3=node(L,{x:220,y:470,w:250,t:'Mac 3 · Soumya',sub:['Backend A · Python','10.7.28.230 · tcp/3001'],c:C.http,role:'APP SERVER A',d:900});
+  const m4=node(L,{x:740,y:470,w:250,t:'Mac 4 · Niharika',sub:['Backend B · Python','10.7.15.199 · tcp/3002'],c:C.http,role:'APP SERVER B · BACKUP DNS',d:1050});
+  [m1,m2,m3,m4].forEach((m,i)=>wire(L,m,ap,{dash:1,d:1300+i*80}));
+  wire(L,m1,m2,{d:1500});wire(L,m2,m3,{d:1650});wire(L,m2,m4,{d:1750});
+  const clouds=[[m1,'≈ Route 53'],[m2,'≈ AWS ALB / CDN edge'],[m3,'≈ EC2 instance A'],[m4,'≈ EC2 instance B']];
+  await w(2200,T);
+  for(const [m,s] of clouds){const t=tx(L.fx,m._x+m._w/2-4,m._y+m._h/2+24,s,'cloud','end');t.animate([{opacity:0},{opacity:1}],{duration:600,fill:'forwards'});await w(260,T)}
+  for(let k=0;;k++){const b=k%2?m4:m3;
+    await fly(L,T,m1,m2,{c:C.tls,label:'🔒 https://app.teamX.test',dur:1000});
+    await fly(L,T,m2,b,{c:C.http,dur:700});await fly(L,T,b,m2,{c:C.ok,dur:700});
+    await fly(L,T,m2,m1,{c:C.ok,label:'200 OK',dur:1000});await w(700,T);}
+};
+
+/* ---- journey ---- */
+function jStep(i){$$('#jSteps li').forEach((li,j)=>{li.classList.toggle('on',j===i);li.classList.toggle('done',j<i)})}
+PLAY['s-journey']=async T=>{
+  const clock=v=>$('#jClock').textContent=v;
+  for(let round=0;;round++){
+    const L=stage($('#svgJourney'));
+    const cl=node(L,{x:120,y:300,w:200,t:'Client',sub:['Mac 1 · curl','10.7.31.159'],c:C.acc,role:'CLIENT'});
+    const dn=node(L,{x:480,y:90,w:230,t:'DNS · dnsmasq',sub:['Mac 1 · backup Mac 4','udp/53'],c:C.dns,d:150,role:'RESOLVER'});
+    const ed=node(L,{x:480,y:300,w:230,t:'Edge · nginx',sub:['Mac 2 · 10.7.4.179','tcp/443 · TLS'],c:C.tls,d:300,role:'EDGE'});
+    const a=node(L,{x:840,y:185,w:200,t:'Backend A',sub:['Mac 3 · :3001'],c:C.http,d:450});
+    const b=node(L,{x:840,y:420,w:200,t:'Backend B',sub:['Mac 4 · :3002'],c:C.http,d:600});
+    wire(L,cl,dn,{dash:1});const ce=wire(L,cl,ed,{d:200});wire(L,ed,a,{d:400});wire(L,ed,b,{d:500});
+    const back=round%2?b:a,n=round%2?'B':'A';
+    jStep(-1);clock('0.0');await w(1300,T);
+    jStep(0);await fly(L,T,cl,dn,{c:C.dns,label:'A? app.teamX.test'});clock('73.7');
+    await fly(L,T,dn,cl,{c:C.dns,label:'A 10.7.4.179 · TTL 30'});
+    jStep(1);clock('109.5');await fly(L,T,cl,ed,{c:C.tcp,label:'SYN',dur:620,lane:-10});
+    clock('173.9');await fly(L,T,ed,cl,{c:C.tcp,label:'SYN-ACK',dur:620,lane:10});
+    clock('174.1');await fly(L,T,cl,ed,{c:C.tcp,label:'ACK',dur:620,lane:-10});
+    jStep(2);clock('174.7');await fly(L,T,cl,ed,{c:C.tls,label:'ClientHello · SNI · h2',lane:-10});
+    clock('184.6');await fly(L,T,ed,cl,{c:C.tls,label:'ServerHello · 🔒 cert',lane:10});ce.classList.add('secure');
+    jStep(3);clock('186.8');await fly(L,T,cl,ed,{c:C.http,label:'🔒 GET /api/status',lane:-10});
+    jStep(4);pulse(L,ed,C.tls);chip(ed,'TLS terminated','info');await w(900,T);
+    jStep(5);await fly(L,T,ed,back,{c:C.http,label:'GET /api/status'});
+    await fly(L,T,back,ed,{c:C.ok,label:`200 · X-Backend: ${n}`});
+    jStep(6);clock('351.7');await fly(L,T,ed,cl,{c:C.ok,label:`🔒 {"backend":"${n}"}`,lane:10});
+    chip(cl,`served by ${n}`,'ok');jStep(7);await w(2800,T);
+  }
+};
+
+/* ---- layers ---- */
+function rhex(n){const h='0123456789abcdef';let s='';for(let i=0;i<n;i++)s+=(i&&i%2===0?' ':'')+h[Math.random()*16|0];return s}
+PLAY['s-layers']=async T=>{
+  const box=$('#pdu'),bars=$$('#stack .lay');
+  for(;;){
+    bars.forEach(b=>b.classList.remove('on'));box.innerHTML='';
+    let cur=div('pay','{"backend": "A", "status": "ok"}');box.append(cur);
+    cur.animate([{opacity:0,transform:'scale(.9)'},{opacity:1,transform:'none'}],{duration:600,fill:'both'});
+    await w(1300,T);
+    const steps=[[0,'l-http','HTTP/2 · :status 200 · x-backend: A · etag · cache-control'],[1,'l-tls','TLS 1.3 record · CHACHA20-POLY1305'],[2,'l-tcp','TCP · 443 → 58446 · seq 2368 · ack 576'],[3,'l-ip','IPv4 · 10.7.4.179 → 10.7.31.159'],[4,'l-link','802.11 · f6:fa:d2:fe:bc:09 → 36:5b:29:6a:40:c4']];
+    for(const [i,cls,lab] of steps){
+      bars.forEach((b,j)=>b.classList.toggle('on',j===i));
+      const wr=div('wrap '+cls);wr.append(div('wlab',lab),cur);box.replaceChildren(wr);cur=wr;
+      if(cls==='l-tls'){const p=box.querySelector('.pay');p.classList.add('enc');(async()=>{try{while(p.isConnected){p.textContent=rhex(22);await w(110,T)}}catch(e){}})();}
+      await w(1700,T);
+    }
+    bars.forEach(b=>b.classList.add('on'));await w(3200,T);
+  }
+};
+
+/* ---- build: split code lines for staggered reveal ---- */
+$$('#s-build pre[data-lines]').forEach(pre=>{pre.innerHTML=pre.innerHTML.split('\n').map((l,i)=>`<span style="--i:${i}">${l||' '}</span>`).join('');});
+$$('#s-build .bcard').forEach(c=>{const d=c.style.getPropertyValue('--d');c.querySelectorAll('pre span[style]').forEach(s=>s.style.setProperty('--d',d))});
+
+/* ---- TLS ---- */
+async function arrow(L,T,x1,x2,y,dir,label,c){
+  const [a,b]=dir>0?[x1,x2]:[x2,x1];
+  const ln=E('line',{x1:a,y1:y,x2:a,y2:y,stroke:c,'stroke-width':2.2,'stroke-linecap':'round'},L.wires);
+  const hd=E('path',{d:dir>0?'M0,0 L-11,-5.5 L-11,5.5Z':'M0,0 L11,-5.5 L11,5.5Z',fill:c,opacity:0},L.wires);hd.setAttribute('transform',`translate(${b} ${y})`);
+  const t=tx(L.nodes,(x1+x2)/2,y-10,label,'mlab','middle');t.style.fill=c;t.style.opacity=0;
+  t.animate([{opacity:0},{opacity:1}],{duration:400,fill:'forwards'});
+  const dur=620,t0=performance.now();
+  await new Promise(r=>{(function f(now){const k=Math.min(1,(now-t0)/dur),e=1-Math.pow(1-k,3);ln.setAttribute('x2',a+(b-a)*e);if(k<1&&T===TOKEN)requestAnimationFrame(f);else r()})(t0)});
+  if(T!==TOKEN)throw STOP;hd.setAttribute('opacity',1);
+}
+function bracket(L,x,y1,y2,lab,c){const p=E('path',{d:`M${x+10},${y1} L${x},${y1} L${x},${y2} L${x+10},${y2}`,fill:'none',stroke:c,'stroke-width':1.5,opacity:.7},L.bg);
+  const t=tx(L.bg,x-12,(y1+y2)/2,lab,'mlab','middle');t.style.fill=c;t.setAttribute('transform',`rotate(-90 ${x-12} ${(y1+y2)/2})`);
+  [p,t].forEach(e=>e.animate([{opacity:0},{opacity:1}],{duration:600,fill:'both'}));}
+PLAY['s-tls']=async T=>{
+  for(;;){
+    const L=stage($('#svgTLS'));const ws=$('#tlsWire'),cv=$('#tlsCurl');ws.innerHTML='';cv.innerHTML='';
+    const xc=180,xe=800;
+    const head=(x,t,s,c)=>{const g=E('g',{},L.nodes);E('rect',{x:x-110,y:18,width:220,height:58,rx:12,fill:'#0b1221',stroke:c,'stroke-opacity':.6},g);tx(g,x,44,t,'ntitle','middle');tx(g,x,64,s,'nsub','middle');E('line',{x1:x,y1:78,x2:x,y2:590,stroke:'rgba(255,255,255,.12)','stroke-dasharray':'3 6'},L.bg);g.animate([{opacity:0},{opacity:1}],{duration:500,fill:'both'});};
+    head(xc,'Client','Mac 1 · :58446',C.acc);head(xe,'Edge · nginx','Mac 2 · :443',C.tls);
+    await w(700,T);
+    const row=(no,txt,cls)=>{const r=div('r '+cls);r.innerHTML=`<span class="p">#${no}</span><span>${txt}</span>`;ws.append(r);};
+    const enc=()=>`Application Data <span class="x">${rhex(14)}</span>`;
+    bracket(L,70,110,212,'TCP',C.tcp);
+    await arrow(L,T,xc,xe,120,1,'SYN · seq 950382347',C.tcp);row(3,'TCP  58446 → 443 [SYN]','tcp');await w(250,T);
+    await arrow(L,T,xc,xe,165,-1,'SYN, ACK · ack 950382348',C.tcp);row(4,'TCP  443 → 58446 [SYN, ACK]','tcp');await w(250,T);
+    await arrow(L,T,xc,xe,210,1,'ACK',C.tcp);row(5,'TCP  58446 → 443 [ACK]','tcp');await w(400,T);
+    bracket(L,70,262,428,'TLS 1.3',C.tls);
+    await arrow(L,T,xc,xe,270,1,'ClientHello · SNI app.teamx.test · ALPN h2 · x25519',C.tls);row(6,'TLSv1.3  Client Hello (SNI=app.teamx.test)','tls');await w(400,T);
+    await arrow(L,T,xc,xe,326,-1,'ServerHello · TLS 1.3 · CHACHA20-POLY1305',C.tls);row(9,'TLSv1.3  Server Hello, Change Cipher Spec','tls');await w(350,T);
+    await arrow(L,T,xc,xe,374,-1,'🔒 Certificate · CertificateVerify · Finished',C.tls);row(9,enc(),'enc');await w(300,T);
+    await arrow(L,T,xc,xe,420,1,'🔒 Finished',C.tls);row(13,enc(),'enc');
+    for(const [s,c] of [['SSL connection using TLSv1.3 / AEAD-CHACHA20-POLY1305-SHA256','tls'],['ALPN: server accepted h2',''],['subjectAltName: "app.teamX.test" matched','ok'],['issuer: mkcert development CA (Harshita)',''],['SSL certificate verify ok.','ok']]){const d=div('tl '+c,'* '+s);cv.append(d);await w(260,T)}
+    bracket(L,70,478,546,'HTTP/2',C.http);
+    await arrow(L,T,xc,xe,486,1,'🔒 HEADERS · GET /api/status',C.http);row(14,enc(),'enc');await w(250,T);
+    await arrow(L,T,xc,xe,538,-1,'🔒 HEADERS 200 · DATA {"backend":"A"}',C.http);row(25,enc(),'enc');
+    const note=tx(L.fx,(xc+xe)/2,584,'after ServerHello, everything (even the certificate) is encrypted','cloud','middle');note.animate([{opacity:0},{opacity:1}],{duration:700,fill:'both'});
+    await w(5500,T);
+  }
+};
+
+/* ---- LB + cache ---- */
+PLAY['s-lb']=async T=>{
+  for(;;){
+    const L=stage($('#svgLB'));
+    const cl=node(L,{x:85,y:200,w:150,t:'Client',sub:['Mac 1'],c:C.acc});
+    const ed=node(L,{x:330,y:200,w:170,t:'nginx',sub:['round-robin'],c:C.tls,d:150});
+    const a=node(L,{x:570,y:80,w:160,t:'Backend A',sub:[':3001'],c:C.http,d:300});
+    const b=node(L,{x:570,y:320,w:160,t:'Backend B',sub:[':3002'],c:C.acc,d:400});
+    wire(L,cl,ed);wire(L,ed,a,{d:200});wire(L,ed,b,{d:300});
+    const slots=$$('#lbTally i');slots.forEach(s=>{s.textContent='';s.className=''});
+    const rows=$$('#cache .crow');rows.forEach(r=>r.classList.remove('go'));
+    await w(1200,T);
+    for(let i=0;i<6;i++){const tg=i%2?b:a,n=i%2?'B':'A';
+      await fly(L,T,cl,ed,{c:C.tls,dur:380});await fly(L,T,ed,tg,{c:C.http,dur:340});
+      await fly(L,T,tg,ed,{c:n==='A'?C.http:C.acc,label:n,dur:340});await fly(L,T,ed,cl,{c:C.ok,dur:380});
+      slots[i].textContent=n;slots[i].className=n.toLowerCase();}
+    for(const r of rows){void r.offsetWidth;r.classList.add('go');await w(1900,T)}
+    await w(4000,T);
+  }
+};
+
+/* ---- wireshark ---- */
+PLAY['s-wire']=async T=>{
+  const rows=$$('#ws .wr'),cap=$('#wsCap');rows.forEach(r=>r.classList.remove('show','hl','dimmed'));cap.innerHTML='<b>&nbsp;</b><span>&nbsp;</span>';
+  await w(600,T);for(const r of rows){r.classList.add('show');await w(150,T)}
+  const G=[['dns','DNS · UDP 52723 → 53','Query and answer in 73.7 ms. The answer is authoritative (AA flag), carries TTL 30 s, and points at the edge.'],
+           ['tcp','TCP three-way handshake','SYN (seq 950382347) → SYN-ACK (ack 950382348) → ACK. No application byte moves until this completes.'],
+           ['tls','TLS 1.3 handshake','ClientHello carries SNI and ALPN (h2, http/1.1). After the ServerHello, even the certificate is encrypted.'],
+           ['app','Encrypted HTTP/2','The request, headers and JSON appear only as “Application Data”. Only the client and nginx hold the keys.'],
+           ['fin','Connection close','The client sends FIN/ACK once the response arrives; nginx acknowledges and the socket is released.']];
+  for(;;){for(const [g,t,d] of G){rows.forEach(r=>{r.classList.toggle('hl',r.dataset.g===g);r.classList.toggle('dimmed',r.dataset.g!==g)});
+      cap.innerHTML=`<b>${t}</b><span>${d}</span>`;cap.animate([{opacity:0,transform:'translateY(6px)'},{opacity:1,transform:'none'}],{duration:450});await w(3600,T)}}
+};
+
+/* ---- failures ---- */
+const STOPS=['DNS','IP','TCP','TLS','HTTP','Backend'];
+function buildTrack(row){const tr=row.querySelector('.ftrack');tr.innerHTML='';STOPS.forEach(s=>{const d=div('stop',s);tr.append(d)});const dot=div('fdot');tr.append(dot);
+  const m=row.querySelector('.fmsg');m.className='fmsg';m.textContent=row.dataset.msg;m.style.setProperty('--mc',row.dataset.mc);return {tr,dot,m,stops:[...tr.querySelectorAll('.stop')]};}
+PLAY['s-fail']=async T=>{
+  const rows=$$('#fails .frow');
+  for(;;){
+    const R=rows.map(buildTrack);await w(900,T);
+    for(let k=0;k<rows.length;k++){const {dot,m,stops}=R[k];const path=rows[k].dataset.path.split(',');
+      const at=i=>stops[i].offsetLeft+stops[i].offsetWidth/2;
+      dot.style.transition='none';dot.style.left=at(0)-30+'px';dot.style.opacity=1;void dot.offsetWidth;dot.style.transition='';
+      for(let i=0;i<path.length;i++){dot.style.left=at(i)+'px';await w(430,T);stops[i].classList.add(path[i]);}
+      const last=path[path.length-1];dot.style.background=last==='bad'?C.bad:last==='warn'?C.warn:C.ok;dot.style.boxShadow=`0 0 14px ${dot.style.background}`;
+      m.classList.add('show');await w(900,T);}
+    await w(5000,T);
+    R.forEach(r=>{r.dot.style.background='';r.dot.style.boxShadow=''});
+  }
+};
+
+/* ---- Ext A ---- */
+PLAY['s-extA']=async T=>{
+  for(;;){
+    const L=stage($('#svgA'));const t=Term($('#termA'),T);
+    const cl=node(L,{x:120,y:230,w:200,t:'Client',sub:['Mac 1 · resolver list','[0] .31.159  [1] .15.199'],c:C.acc});
+    const pr=node(L,{x:450,y:75,w:230,t:'Primary DNS',sub:['Mac 1 · 10.7.31.159'],c:C.dns,d:150,role:'NAMESERVER[0]'});
+    const bk=node(L,{x:450,y:395,w:230,t:'Backup DNS',sub:['Mac 4 · 10.7.15.199'],c:C.dns,d:300,role:'NAMESERVER[1]'});
+    const ed=node(L,{x:780,y:230,w:200,t:'Edge · nginx',sub:['Mac 2 · 10.7.4.179'],c:C.tls,d:450});
+    wire(L,cl,pr,{dash:1});wire(L,cl,bk,{dash:1});wire(L,cl,ed);
+    await w(1000,T);
+    await t.cmd('scutil --dns | grep nameserver | sort -u');t.out('  nameserver[0] : 10.7.31.159');t.out('  nameserver[1] : 10.7.15.199');
+    await fly(L,T,cl,pr,{c:C.dns,label:'A? app.teamX.test'});await fly(L,T,pr,cl,{c:C.dns,label:'10.7.4.179'});
+    await w(500,T);t.gap();
+    await t.cmd('sudo pkill -x dnsmasq          # on Mac 1');down(pr,true);chip(pr,'STOPPED','bad');pulse(L,pr,C.bad);await w(800,T);
+    await t.cmd('dig @10.7.31.159 app.teamX.test +time=2');
+    const [p1,p2]=lanePts(cl,pr,0);const pm=[p1[0]+(p2[0]-p1[0])*.9,p1[1]+(p2[1]-p1[1])*.9];
+    await flyPts(L,T,p1,pm,{c:C.dns,label:'A?',dur:900});floatTxt(L,pm[0]-30,pm[1]+30,'⏱ timeout',C.bad);
+    t.out(';; connection timed out; no servers could be reached','bad');await w(700,T);t.gap();
+    await t.cmd('dig app.teamX.test +noall +answer +stats');
+    await fly(L,T,cl,bk,{c:C.dns,label:'A? (next server)'});await fly(L,T,bk,cl,{c:C.dns,label:'10.7.4.179 · TTL 30'});
+    t.out('app.teamX.test.   30  IN  A  10.7.4.179','ok');t.out(';; SERVER: 10.7.15.199#53(10.7.15.199)','ok');chip(bk,'ANSWERING','ok');t.gap();
+    await t.cmd('curl --cacert rootCA.pem -si https://app.teamX.test/api/status');
+    await fly(L,T,cl,ed,{c:C.tls,label:'🔒 GET /api/status',lane:-8});await fly(L,T,ed,cl,{c:C.ok,label:'HTTP/2 200',lane:8});
+    t.out('HTTP/2 200','ok');t.out('x-backend: A','ok');await w(900,T);t.gap();
+    await t.cmd('sudo dnsmasq -C /opt/homebrew/etc/dnsmasq.conf   # Mac 1');down(pr,false);chip(pr,'BACK','ok');chip(bk,'');
+    t.out('dig @10.7.31.159 app.teamX.test +short → 10.7.4.179','dim');
+    await w(5000,T);
+  }
+};
+
+/* ---- Ext B ---- */
+PLAY['s-extB']=async T=>{
+  const pri=$('#bPri'),bak=$('#bBak'),cli=$('#bCli'),tg=$('#bTag'),ring=$('#bRing'),rt=$('#bRingT'),rs=$('#bRingS'),clk=$('#bClock'),cmd=$('#bCmd'),tl=$$('#bTL li');
+  const set=(el,v,c='')=>{el.textContent=v;el.className='ip '+c;el.classList.remove('flashit');void el.offsetWidth;el.classList.add('flashit')};
+  const tag=(s,c)=>{tg.textContent=s;tg.className='tag '+(s?'show '+c:'')};
+  const R=(f,txt,col,sub)=>{ring.style.strokeDashoffset=(314.16*(1-f)).toFixed(1);ring.style.stroke=col||C.acc;rt.textContent=txt;if(sub)rs.textContent=sub};
+  const hms=s=>[s/3600|0,(s%3600)/60|0,s%60].map(v=>String(v).padStart(2,'0')).join(':');
+  const step=i=>tl.forEach((li,j)=>{li.classList.toggle('on',j===i);li.classList.toggle('done',j<i)});
+  const say=s=>{cmd.textContent=s;cmd.animate([{opacity:0},{opacity:1}],{duration:400})};
+  for(;;){
+    set(pri,'10.7.4.179');set(bak,'10.7.4.179');set(cli,'-');tag('','');R(1,'TTL 30 s',C.acc,"time left on the client's cached answer");clk.textContent='12:57:53';step(-1);say('');
+    await w(1400,T);step(0);say('dig app.teamX.test → app.teamX.test.  30  IN  A  10.7.4.179');
+    await w(2200,T);step(1);clk.textContent='12:58:19';set(cli,'10.7.4.179','ok');tag('CACHED','ok');say('dscacheutil -q host -a name app.teamX.test → 10.7.4.179');
+    const base=12*3600+58*60+19;
+    for(let s=0;s<=43;s++){clk.textContent=hms(base+s);
+      if(s<=30)R(1-s/30,`${30-s} s`,C.acc,'TTL remaining on the cached answer');else R(0,`+${s-30} s`,C.warn,'TTL expired, macOS still serving the old answer');
+      if(s===3){step(2);set(pri,'10.7.28.230','new');set(bak,'10.7.28.230','new');tag('STALE','warn');say('both servers edited → 10.7.28.230 · dnsmasq restarted · client still says 10.7.4.179');await w(1600,T);}
+      await w(150,T);}
+    step(3);set(cli,'10.7.28.230','ok');tag('UPDATED AFTER ≈43 s','ok');R(1,'re-cached',C.ok,'new answer cached');say('client now resolves 10.7.28.230');
+    await w(3000,T);step(4);clk.textContent='12:59:22';set(pri,'10.7.4.179','new');set(bak,'10.7.4.179','new');tag('STALE','warn');R(.33,'~10 s',C.warn,'old answer still cached');say('records reverted on both servers → 10.7.4.179 · client still says 10.7.28.230');
+    await w(2600,T);say('sudo dscacheutil -flushcache; sudo killall -HUP mDNSResponder');await w(1300,T);
+    step(5);set(cli,'10.7.4.179','ok');tag('FLUSHED · INSTANT','ok');R(1,'fresh',C.ok,'cache flushed manually');
+    await w(5500,T);
+  }
+};
+
+/* ---- Ext C ---- */
+function wall(L,n){const x=n._x-n._w/2-22,y=n._y;const g=E('g',{},L.fx);
+  E('rect',{x:x-4,y:y-62,width:8,height:124,rx:4,fill:C.warn,filter:L.glow},g);tx(g,x,y-74,'pf','mlab','middle').style.fill=C.warn;
+  g.animate([{opacity:0,transform:'scaleY(.3)'},{opacity:1,transform:'none'}],{duration:600,fill:'both'});g.style.transformOrigin=`${x}px ${y}px`;g._x=x;return g;}
+PLAY['s-extC']=async T=>{
+  for(;;){
+    const L=stage($('#svgC'));const t=Term($('#termC'),T,16);
+    const cl=node(L,{x:130,y:110,w:200,t:'Client · Mac 1',sub:['10.7.31.159'],c:C.acc});
+    const ed=node(L,{x:300,y:380,w:200,t:'Edge · Mac 2',sub:['10.7.4.179'],c:C.tls,d:150});
+    const a=node(L,{x:760,y:110,w:200,t:'Backend A',sub:['Mac 3 · :3001'],c:C.http,d:300});
+    const b=node(L,{x:760,y:380,w:200,t:'Backend B',sub:['Mac 4 · :3002'],c:C.http,d:450});
+    wire(L,cl,a,{dash:1});wire(L,cl,b,{dash:1});wire(L,ed,a);wire(L,ed,b);wire(L,cl,ed);
+    await w(1000,T);
+    await t.cmd('sudo pfctl -f pf-isolation-mac3.conf -E   # Mac 3 (and Mac 4)');
+    t.out('pass in quick inet proto tcp from 10.7.4.179 to any port = 3001','ok');t.out('block return in quick proto tcp from any to any port = 3001','bad');
+    const wa=wall(L,a),wb=wall(L,b);await w(900,T);t.gap();
+    const k=(from,to,wl)=>{const [p1,p2]=lanePts(from,to,0);return (wl._x-6-p1[0])/(p2[0]-p1[0]);};
+    await t.cmd('curl -si --max-time 5 http://10.7.28.230:3001/api/status   # Mac 1');
+    await bounce(L,T,cl,a,k(cl,a,wa),{c:C.acc,label:'SYN :3001',back:'RST'});t.out('-> blocked','bad');
+    await t.cmd('curl -si --max-time 5 http://10.7.15.199:3002/api/status');
+    await bounce(L,T,cl,b,k(cl,b,wb),{c:C.acc,label:'SYN :3002',back:'RST'});t.out('-> blocked','bad');t.gap();
+    await t.cmd('curl -si http://10.7.28.230:3001/api/status   # Mac 2, the edge');
+    await fly(L,T,ed,a,{c:C.tls,label:'from 10.7.4.179 ✓'});await fly(L,T,a,ed,{c:C.ok,label:'200'});t.out('HTTP/1.0 200 OK   X-Backend: A','ok');
+    await fly(L,T,ed,b,{c:C.tls,label:'from 10.7.4.179 ✓'});await fly(L,T,b,ed,{c:C.ok,label:'200'});t.out('HTTP/1.0 200 OK   X-Backend: B','ok');t.gap();
+    await t.cmd('curl --cacert rootCA.pem -sI https://app.teamX.test/api/status   # Mac 1');
+    await fly(L,T,cl,ed,{c:C.tls,label:'🔒 HTTPS'});await fly(L,T,ed,a,{c:C.http});await fly(L,T,a,ed,{c:C.ok});await fly(L,T,ed,cl,{c:C.ok,label:'HTTP/2 200'});
+    t.out('HTTP/2 200  x-backend: A   ← the edge path still works','ok');await w(1200,T);t.gap();
+    await t.cmd('sudo pfctl -f /etc/pf.conf && sudo pfctl -X <token>   # rollback');
+    [wa,wb].forEach(g=>g.animate([{opacity:1},{opacity:0}],{duration:600,fill:'forwards'}));
+    t.out('Status: Disabled · Team X rules left: 0','ok');
+    await w(5000,T);
+  }
+};
+
+/* ---- Ext D ---- */
+PLAY['s-extD']=async T=>{
+  for(;;){
+    const L=stage($('#svgD'));const t=Term($('#termD'),T,8);
+    const cl=node(L,{x:110,y:260,w:180,t:'Client',sub:['Mac 1'],c:C.acc});
+    const ed=node(L,{x:420,y:260,w:200,t:'Edge · nginx',sub:['Mac 2','max_fails=1 · 10 s'],c:C.tls,d:150});
+    const a=node(L,{x:760,y:120,w:190,t:'Backend A',sub:['Mac 3 · :3001'],c:C.http,d:300});
+    const b=node(L,{x:760,y:400,w:190,t:'Backend B',sub:['Mac 4 · :3002'],c:C.acc,d:450});
+    wire(L,cl,ed);wire(L,ed,a,{d:200});wire(L,ed,b,{d:300});
+    const T0=$$('#dT0 i'),T1=$$('#dT1 i'),T2=$$('#dT2 i');[...T0,...T1,...T2].forEach(s=>{s.textContent='';s.className=''});
+    t.out('# tail -f /opt/homebrew/var/log/nginx/error.log','dim');
+    const req=async(tg,slot,fail)=>{await fly(L,T,cl,ed,{c:C.tls,dur:280});
+      if(fail){await fly(L,T,ed,a,{c:C.http,dur:300,stopAt:.8,label:'connect()'});const [p1,p2]=lanePts(ed,a,0);floatTxt(L,p1[0]+(p2[0]-p1[0])*.8,p1[1]+(p2[1]-p1[1])*.8+30,'✕ refused',C.bad);
+        t.out('[error] connect() failed (61: Connection refused) while connecting to upstream, upstream: "http://10.7.28.230:3001/api/status"','bad');t.out('→ proxy_next_upstream: retry on 10.7.15.199:3002','warn');await w(300,T);}
+      await fly(L,T,ed,tg,{c:C.http,dur:280});const n=tg===a?'A':'B';await fly(L,T,tg,ed,{c:n==='A'?C.http:C.acc,label:n,dur:280});await fly(L,T,ed,cl,{c:C.ok,label:'200',dur:280});
+      slot.textContent=n;slot.className=n.toLowerCase();};
+    await w(1100,T);
+    for(let i=0;i<6;i++)await req(i%2?a:b,T0[i]);
+    await w(600,T);down(a,true);chip(a,'Ctrl+C · STOPPED','bad');pulse(L,a,C.bad);await w(1000,T);
+    await req(b,T1[0],true);chip(a,'MARKED DOWN 10 s','bad');
+    for(let i=1;i<6;i++)await req(b,T1[i]);
+    t.out('access.log: 6 × "GET /api/status HTTP/2.0" 200','ok');
+    await w(700,T);down(a,false);chip(a,'RESTARTED · fail_timeout','warn');await w(900,T);
+    await req(b,T2[0]);await req(b,T2[1]);chip(a,'HEALTHY','ok');
+    for(let i=2;i<6;i++)await req(i%2?b:a,T2[i]);
+    t.out('18 / 18 requests → HTTP 200','ok');
+    await w(5000,T);
+  }
+};
+
+/* ---- Ext E ---- */
+PLAY['s-extE']=async T=>{
+  const tl=$$('#eTL li');const step=i=>tl.forEach((li,j)=>{li.classList.toggle('on',j===i);li.classList.toggle('done',j<i)});
+  for(;;){
+    const L=stage($('#svgE'));step(-1);
+    const m1=node(L,{x:130,y:110,w:220,t:'Mac 1',sub:['cached client','cache: 10.7.4.179'],c:C.acc,role:'CLIENT A'});
+    const m4=node(L,{x:130,y:450,w:220,t:'Mac 4',sub:['fresh client','cache: empty'],c:C.acc,role:'CLIENT B',d:150});
+    const dn=node(L,{x:330,y:280,w:220,t:'DNS (Mac 1 + Mac 4)',sub:['app → 10.7.4.179'],c:C.dns,d:300,h:74});
+    const e2=node(L,{x:770,y:110,w:220,t:'Edge · Mac 2',sub:['10.7.4.179','X-Edge: mac2'],c:C.tls,d:450,role:'PRIMARY EDGE'});
+    const e3=node(L,{x:770,y:450,w:220,t:'Standby · Mac 3',sub:['10.7.28.230','X-Edge: mac3'],c:C.tls,d:600,role:'STANDBY EDGE'});
+    wire(L,m1,dn,{dash:1});wire(L,m4,dn,{dash:1});wire(L,m1,e2,{d:300});wire(L,m4,e3,{d:400});wire(L,m1,e3,{dash:1,d:500});
+    await w(1200,T);
+    step(0);chip(e3,'nginx -t ok · --resolve → mac3','ok');await w(1600,T);chip(e3,'');
+    step(1);await fly(L,T,m1,e2,{c:C.tls,label:'🔒 GET',lane:-8});await fly(L,T,e2,m1,{c:C.ok,label:'X-Edge: mac2',lane:8});
+    step(2);setSub(dn,0,'app → 10.7.28.230');pulse(L,dn,C.dns);chip(dn,'RECORD CHANGED','dns');await w(1000,T);
+    await fly(L,T,m1,e2,{c:C.tls,label:'🔒 GET (cached IP)',lane:-8});await fly(L,T,e2,m1,{c:C.ok,label:'X-Edge: mac2',lane:8});chip(m1,'STALE · still mac2','warn');
+    step(3);await fly(L,T,m4,dn,{c:C.dns,label:'A?'});await fly(L,T,dn,m4,{c:C.dns,label:'10.7.28.230'});setSub(m4,1,'cache: 10.7.28.230');
+    await fly(L,T,m4,e3,{c:C.tls,label:'🔒 GET',lane:-8});await fly(L,T,e3,m4,{c:C.ok,label:'X-Edge: mac3',lane:8});chip(m4,'→ mac3','ok');
+    await w(800,T);step(4);chip(m1,'cache expired','warn');await w(700,T);
+    await fly(L,T,m1,dn,{c:C.dns,label:'A?'});await fly(L,T,dn,m1,{c:C.dns,label:'10.7.28.230'});setSub(m1,1,'cache: 10.7.28.230');
+    await fly(L,T,m1,e3,{c:C.tls,label:'🔒 GET'});await fly(L,T,e3,m1,{c:C.ok,label:'X-Edge: mac3'});chip(m1,'→ mac3','ok');
+    await w(1200,T);step(5);setSub(dn,0,'app → 10.7.4.179');chip(dn,'CUT BACK','dns');chip(e3,'nginx -s stop','bad');down(e3,true);chip(m1,'');chip(m4,'');
+    await w(600,T);setSub(m1,1,'cache: 10.7.4.179');
+    await fly(L,T,m1,e2,{c:C.tls,label:'🔒 GET',lane:-8});await fly(L,T,e2,m1,{c:C.ok,label:'X-Edge: mac2',lane:8});
+    await w(5000,T);
+  }
+};
+
+/* ---- Ext F ---- */
+PLAY['s-extF']=async T=>{
+  const rungs=$$('#ladder .rung'),nm=$('#fName'),vd=$('#fVerdict');
+  const S=[
+    {name:'nginx stopped on Mac 2',v:'Layer: TCP. The host is up, but nothing is listening on 443 → start nginx.',
+     r:[['dig app.teamX.test','A 10.7.4.179 ✓','ok'],['ping -c 2 10.7.4.179','2 received, 0% loss ✓','ok'],['nc -vz 10.7.4.179 443','Connection refused ✕','bad']]},
+    {name:'Wrong A record on both DNS servers',v:'Layer: DNS. Resolution “works” but points elsewhere → fix the address= lines.',
+     r:[['dig app.teamX.test +short','10.7.12.123 ✕ (edge is 10.7.4.179)','bad']]},
+    {name:'Certificate missing app.teamX.test in its SAN',v:'Layer: TLS. TCP is fine; the certificate does not match the name → reissue with mkcert.',
+     r:[['dig app.teamX.test','A 10.7.4.179 ✓','ok'],['ping -c 2 10.7.4.179','0% loss ✓','ok'],['nc -vz 10.7.4.179 443','succeeded ✓','ok'],['openssl s_client -connect 10.7.4.179:443 -servername app.teamX.test','verify error: hostname mismatch ✕','bad']]},
+    {name:'Backend B bound to 127.0.0.1',v:'Layer: Backend. B listens on localhost only → bind it to 0.0.0.0.',
+     r:[['dig app.teamX.test','A 10.7.4.179 ✓','ok'],['ping -c 2 10.7.4.179','0% loss ✓','ok'],['nc -vz 10.7.4.179 443','succeeded ✓','ok'],['openssl s_client … -servername app.teamX.test','Verify return code: 0 (ok) ✓','ok'],
+        ['tail error.log   # Mac 2','connect() refused 10.7.15.199:3002 · requests retried on A','warn','~ retried'],['curl http://10.7.15.199:3002/   # from Mac 2','Connection refused ✕','bad']]}];
+  for(let k=0;;k++){const s=S[k%S.length];const t=Term($('#termF'),T,10);
+    rungs.forEach(r=>{r.className='rung';r.querySelector('.st').textContent='·'});vd.classList.remove('show');vd.textContent=s.v;
+    nm.textContent=s.name;nm.animate([{opacity:0,transform:'translateY(8px)'},{opacity:1,transform:'none'}],{duration:500});
+    await w(1000,T);
+    for(let i=0;i<s.r.length;i++){const r=rungs[i],[c,o,cl,st]=s.r[i];r.classList.add('chk');r.querySelector('.st').textContent='checking…';
+      await t.cmd(c);await w(300,T);t.out(o,cl);r.classList.remove('chk');
+      if(cl==='bad'){r.classList.add('bad');r.querySelector('.st').textContent='✕ FAULT'}
+      else{r.classList.add('ok');r.querySelector('.st').textContent=st||'✓ ok'}
+      await w(250,T);}
+    rungs.forEach((r,i)=>{if(i>=s.r.length)r.classList.add('skip')});
+    vd.classList.add('show');await w(5200,T);}
+};
+
+/* ---- SPOF ---- */
+PLAY['s-learn']=async T=>{
+  const cap=$('#spCap');const say=s=>{cap.textContent=s;cap.animate([{opacity:0},{opacity:1}],{duration:500})};
+  for(;;){
+    let L=stage($('#svgSPOF'));
+    let c1=node(L,{x:100,y:150,w:160,t:'Client',sub:['Mac 1'],c:C.acc}),c2=node(L,{x:100,y:370,w:160,t:'Client',sub:['Mac 4'],c:C.acc,d:100});
+    let e=node(L,{x:400,y:260,w:190,t:'Edge · Mac 2',sub:['the only entry point'],c:C.tls,d:200});
+    let a=node(L,{x:690,y:150,w:170,t:'Backend A',sub:[':3001'],c:C.http,d:300}),b=node(L,{x:690,y:370,w:170,t:'Backend B',sub:[':3002'],c:C.http,d:400});
+    [[c1,e],[c2,e],[e,a],[e,b]].forEach(([x,y],i)=>wire(L,x,y,{d:i*100}));
+    say('Today: backends are redundant, but the edge is not.');await w(1200,T);
+    await Promise.all([fly(L,T,c1,e,{c:C.tls}),fly(L,T,c2,e,{c:C.tls})]);await Promise.all([fly(L,T,e,a,{c:C.http}),fly(L,T,e,b,{c:C.http})]);
+    await w(400,T);down(e,true);chip(e,'MAC 2 DOWN','bad');pulse(L,e,C.bad);say('If Mac 2 stops, nothing works, even with both backends healthy.');await w(900,T);
+    const pm=await Promise.all([bounce(L,T,c1,e,.85,{c:C.tls,back:'✕',hit:''}),bounce(L,T,c2,e,.85,{c:C.tls,back:'✕',hit:''})]);
+    await w(2200,T);
+    L=stage($('#svgSPOF'));
+    c1=node(L,{x:90,y:150,w:150,t:'Client',sub:['Mac 1'],c:C.acc});c2=node(L,{x:90,y:370,w:150,t:'Client',sub:['Mac 4'],c:C.acc});
+    const vip=node(L,{x:290,y:260,w:150,h:74,t:'Virtual IP',sub:['VRRP · keepalived'],c:C.warn,d:100});
+    const e1=node(L,{x:500,y:150,w:170,t:'Edge 1',sub:['nginx'],c:C.tls,d:250}),e2=node(L,{x:500,y:370,w:170,t:'Edge 2',sub:['nginx'],c:C.tls,d:350});
+    a=node(L,{x:715,y:150,w:150,t:'Backend A',sub:[':3001'],c:C.http,d:450});b=node(L,{x:715,y:370,w:150,t:'Backend B',sub:[':3002'],c:C.http,d:550});
+    [[c1,vip],[c2,vip],[vip,e1],[vip,e2],[e1,a],[e1,b],[e2,a],[e2,b]].forEach(([x,y],i)=>wire(L,x,y,{d:i*80,dash:(x===vip&&y===e2)?1:0}));
+    say('The fix: two edges behind a floating IP (or DNS failover, or a managed LB).');chip(vip,'→ Edge 1','warn');await w(1400,T);
+    await fly(L,T,c1,vip,{c:C.tls});await fly(L,T,vip,e1,{c:C.tls});await fly(L,T,e1,a,{c:C.http});
+    await w(300,T);down(e1,true);chip(e1,'DOWN','bad');pulse(L,e1,C.bad);await w(700,T);chip(vip,'VRRP → Edge 2','ok');pulse(L,vip,C.warn);say('Edge 1 fails: the virtual IP moves to Edge 2 and traffic keeps flowing.');
+    await w(600,T);await fly(L,T,c2,vip,{c:C.tls});await fly(L,T,vip,e2,{c:C.tls});await fly(L,T,e2,b,{c:C.http});await fly(L,T,b,e2,{c:C.ok});await fly(L,T,e2,vip,{c:C.ok});await fly(L,T,vip,c2,{c:C.ok,label:'200'});
+    await w(4000,T);
+  }
+};
+
+/* =================================================================
+   Navigation
+   ================================================================= */
+const slides=$$('.slide');let cur=-1;
+function go(i,force){
+  i=Math.max(0,Math.min(slides.length-1,i));if(i===cur&&!force)return;
+  slides.forEach(s=>s.classList.remove('active'));
+  const s=slides[i];void s.offsetWidth;s.classList.add('active');cur=i;
+  $('#fSec').textContent=s.dataset.sec||'';$('#fNum').textContent=String(i+1).padStart(2,'0')+' / '+String(slides.length).padStart(2,'0');
+  $('#prog').style.width=((i+1)/slides.length*100)+'%';
+  history.replaceState(null,'','#'+(i+1));
+  TOKEN++;const T=TOKEN;$$('svg.dia').forEach(v=>{if(!s.contains(v))v.innerHTML=''});
+  const p=PLAY[s.id];if(p)setTimeout(()=>{if(T===TOKEN)p(T).catch(e=>{if(e!==STOP)console.error(e)})},350);
+}
+function replay(){const s=slides[cur];s.classList.remove('active');void s.offsetWidth;go(cur,true);}
+document.addEventListener('keydown',e=>{
+  if(['ArrowRight','PageDown',' ','Enter'].includes(e.key)){e.preventDefault();go(cur+1)}
+  else if(['ArrowLeft','PageUp','Backspace'].includes(e.key)){e.preventDefault();go(cur-1)}
+  else if(e.key==='Home')go(0);else if(e.key==='End')go(slides.length-1);
+  else if(e.key==='r'||e.key==='R')replay();
+  else if(e.key==='f'||e.key==='F'){document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen().catch(()=>{})}
+  hideHint();
+});
+$('#nextB').onclick=()=>{go(cur+1);hideHint()};$('#prevB').onclick=()=>{go(cur-1);hideHint()};
+let tx0=null;addEventListener('touchstart',e=>tx0=e.touches[0].clientX,{passive:true});
+addEventListener('touchend',e=>{if(tx0==null)return;const d=e.changedTouches[0].clientX-tx0;if(Math.abs(d)>50)go(cur+(d<0?1:-1));tx0=null});
+let mT;addEventListener('mousemove',()=>{document.body.classList.add('mouse');clearTimeout(mT);mT=setTimeout(()=>document.body.classList.remove('mouse'),2200)});
+let hintT=setTimeout(hideHint,7000);function hideHint(){$('#hint').style.opacity=0;clearTimeout(hintT)}
+function fit(){const s=Math.min(innerWidth/1600,innerHeight/900);$('#deck').style.transform=`translate(-50%,-50%) scale(${s})`;}
+addEventListener('resize',fit);fit();
+const start=parseInt(location.hash.slice(1))||1;go(start-1);
+
+/* =================================================================
+   Ambient background
+   ================================================================= */
+(()=>{const cv=$('#bg'),ctx=cv.getContext('2d');let W,H,P=[],dpr=Math.min(devicePixelRatio||1,2);
+  function rs(){W=innerWidth;H=innerHeight;cv.width=W*dpr;cv.height=H*dpr;ctx.setTransform(dpr,0,0,dpr,0,0);
+    const n=Math.round(W*H/26000);P=Array.from({length:n},()=>({x:Math.random()*W,y:Math.random()*H,vx:(Math.random()-.5)*.15,vy:(Math.random()-.5)*.15}))}
+  rs();addEventListener('resize',rs);const pk=[];
+  function frame(){ctx.clearRect(0,0,W,H);
+    const g=ctx.createRadialGradient(W*.75,H*.15,0,W*.75,H*.15,W*.7);g.addColorStop(0,'rgba(94,234,212,.06)');g.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+    const g2=ctx.createRadialGradient(W*.1,H*.95,0,W*.1,H*.95,W*.6);g2.addColorStop(0,'rgba(177,151,252,.05)');g2.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=g2;ctx.fillRect(0,0,W,H);
+    for(const p of P){p.x+=p.vx;p.y+=p.vy;if(p.x<0||p.x>W)p.vx*=-1;if(p.y<0||p.y>H)p.vy*=-1}
+    ctx.lineWidth=1;
+    for(let i=0;i<P.length;i++)for(let j=i+1;j<P.length;j++){const a=P[i],b=P[j],d=Math.hypot(a.x-b.x,a.y-b.y);if(d<150){ctx.strokeStyle=`rgba(148,170,210,${.07*(1-d/150)})`;ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();
+      if(Math.random()<.0004&&pk.length<6)pk.push({a,b,t:0})}}
+    ctx.fillStyle='rgba(170,190,225,.35)';for(const p of P){ctx.beginPath();ctx.arc(p.x,p.y,1.1,0,7);ctx.fill()}
+    for(let i=pk.length-1;i>=0;i--){const q=pk[i];q.t+=.012;if(q.t>1){pk.splice(i,1);continue}const x=q.a.x+(q.b.x-q.a.x)*q.t,y=q.a.y+(q.b.y-q.a.y)*q.t;
+      ctx.fillStyle='rgba(94,234,212,.7)';ctx.shadowColor='#5eead4';ctx.shadowBlur=10;ctx.beginPath();ctx.arc(x,y,1.8,0,7);ctx.fill();ctx.shadowBlur=0}
+    requestAnimationFrame(frame)}
+  frame();})();
+</script>
+</body>
+</html>
