@@ -1,0 +1,16 @@
+# Task A: Mac 2 IP, mask, gateway, interface, MAC
+# Machine: Mac 2 (edge nginx) (Harshitas-MacBook-Pro-4), en0 = 10.7.4.179
+# Time:    2026-11-23 12:46:42 IST
+
+$ networksetup -getinfo 'Wi-Fi'; echo; echo 'en0 MAC (on the wire):'; ifconfig en0 | grep ether
+Manual Configuration
+IP address: 10.7.4.179
+Subnet mask: 255.255.224.0
+Router: 10.7.0.1
+IPv6: Automatic
+IPv6 IP address: none
+IPv6 Router: none
+Wi-Fi ID: 10:9f:41:c4:60:18
+
+en0 MAC (on the wire):
+	ether f6:fa:d2:fe:bc:09
