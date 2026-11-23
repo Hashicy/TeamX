@@ -132,7 +132,7 @@ check_local_backend() {  # check_local_backend <port> <letter> <path-to-server.p
 check_dnsmasq() {  # check_dnsmasq <repo-config> <my-ip>
   local tmp; tmp=$(mktemp); render "$1" > "$tmp"
   if [[ ! -x $DNSMASQ_BIN ]]; then bad "dnsmasq not installed: brew install dnsmasq"; rm -f "$tmp"; return; fi
-  if sudo launchctl list 2>/dev/null | grep -q homebrew.mxcl.dnsmasq; then
+  if sudo launchctl list 2>/dev/null | grep -qE "homebrew.mxcl.dnsmasq|sh.brew.dnsmasq"; then
     echo "  ${R}✘${N} dnsmasq is managed by 'brew services'; these scripts start it directly (like in Phase 1)"
     if ask "Stop the brew service so this script can manage dnsmasq?"; then sudo brew services stop dnsmasq >/dev/null 2>&1
     else FAILED=$((FAILED + 1)); rm -f "$tmp"; return; fi

@@ -20,7 +20,7 @@ listeners_443() { sudo lsof -t -nP -iTCP:443 -sTCP:LISTEN 2>/dev/null | sort -u;
 # Stop whatever is listening on TCP 443 so nginx can start cleanly with the Phase 2 config.
 free_port_443() {
   # nginx kept alive by 'brew services' would be restarted by launchd after a kill: stop the service first
-  if sudo launchctl list 2>/dev/null | grep -q homebrew.mxcl.nginx || launchctl list 2>/dev/null | grep -q homebrew.mxcl.nginx; then
+  if sudo launchctl list 2>/dev/null | grep -qE "homebrew.mxcl.nginx|sh.brew.nginx" || launchctl list 2>/dev/null | grep -qE "homebrew.mxcl.nginx|sh.brew.nginx"; then
     info "nginx is managed by 'brew services': stopping that service"
     sudo brew services stop nginx >/dev/null 2>&1; brew services stop nginx >/dev/null 2>&1; sleep 1
   fi
@@ -106,8 +106,16 @@ sec_extC() {
 sec_extD() {
   title "Extension D: what nginx logged during the failover"
   info "Run this right after Manan's extD section."
-  evidence extD-1-error-log "nginx detected Backend A down and moved to the next upstream" \
-    "grep -E 'connect\\(\\) failed|upstream|no live' /opt/homebrew/var/log/nginx/error.log | tail -8"
+  # Only today's requests from Mac 1 (Manan's test client), so older Phase 1 / setup errors don't show up
+  local day_err day_acc errs times
+  day_err=$(date +%Y/%m/%d); day_acc=$(date +%d/%b/%Y)
+  errs="grep -E 'connect\\(\\) failed|upstream|no live' /opt/homebrew/var/log/nginx/error.log | grep '^$day_err' | grep 'client: $MAC1_IP,' | tail -8"
+  evidence extD-1-error-log "nginx detected Backend A down and moved to the next upstream (requests from Mac 1, today)" "$errs"
+  # The seconds those failures happened, so the access log shows exactly those requests
+  times=$(bash -c "$errs" | awk '{print $2}' | sort -u | paste -sd'|' -)
+  [[ -z $times ]] && { bad "no failover errors from Mac 1 today: run this right after Manan's extD"; return; }
+  evidence extD-2-access-log "The same requests still got HTTP 200 for Mac 1 (nginx retried them on Backend B)" \
+    "grep -E '^$MAC1_IP .*\\[$day_acc:($times) ' /opt/homebrew/var/log/nginx/access.log"
 }
 
 run_sections "${1:-check}"
