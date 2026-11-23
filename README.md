@@ -35,8 +35,6 @@ Phase 2 hardens the same network: backup DNS, DNS TTL, backend firewall isolatio
 | E: Edge migration | Standby nginx on Mac 3 (`X-Edge: mac3`); DNS cutover to it and back | `nginx-phase2.conf` |
 | F: Troubleshooting | Layer-by-layer diagnosis: DNS, IP, TCP, TLS, application | [Step 10](#step-10-fault-diagnosis-ext-f) |
 
-Also fixed from Phase 1: both backends send `X-Backend`; ETag + `304 Not Modified` + `HEAD` (`curl -I`) support; a single `Cache-Control` header; HTTP/2 via ALPN; one Wireshark capture of a complete request.
-
 * Full walkthrough with what we observed: [`configuration/phase2/README.md`](configuration/phase2/README.md)
 * Evidence from the 23 Nov 2026 session: `Evidences/phase2/mac1` … `mac4`
 * Final report and presentation: `docs/TeamX_Phase2_Final_Report.pdf`, `docs/index.html`
