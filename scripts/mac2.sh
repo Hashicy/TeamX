@@ -10,7 +10,31 @@ SECTIONS=(phase1 extC extD)
 
 # On Mac 2 the CA lives in mkcert's own folder
 if command -v mkcert >/dev/null 2>&1 && [[ -f "$(mkcert -CAROOT)/rootCA.pem" ]]; then CA_FILE="$(mkcert -CAROOT)/rootCA.pem"; fi
-CURL="curl --cacert $CA_FILE --resolve $DOMAIN:443:127.0.0.1"
+CURL="curl --cacert '$CA_FILE' --resolve $DOMAIN:443:127.0.0.1"   # quoted: mkcert's folder is "Application Support"
+
+# Mac 2 only: clear stray keystrokes (e.g. the Enter after the password) before every y/N question
+ask() { local a; while read -r -t 1 -n 1000 _; do :; done; read -r -p "  ${Y}?${N} $* [y/N] " a; [[ $a == [yY]* ]]; }
+
+listeners_443() { sudo lsof -t -nP -iTCP:443 -sTCP:LISTEN 2>/dev/null | sort -u; }
+
+# Stop whatever is listening on TCP 443 so nginx can start cleanly with the Phase 2 config.
+free_port_443() {
+  # nginx kept alive by 'brew services' would be restarted by launchd after a kill: stop the service first
+  if sudo launchctl list 2>/dev/null | grep -q homebrew.mxcl.nginx || launchctl list 2>/dev/null | grep -q homebrew.mxcl.nginx; then
+    info "nginx is managed by 'brew services': stopping that service"
+    sudo brew services stop nginx >/dev/null 2>&1; brew services stop nginx >/dev/null 2>&1; sleep 1
+  fi
+  [[ -z $(listeners_443) ]] && return 0
+  info "port 443 is in use by:"
+  sudo lsof -nP -iTCP:443 -sTCP:LISTEN | awk 'NR > 1 {print "      " $1 " (PID " $2 ", user " $3 ")"}' | sort -u
+  sudo nginx -s stop 2>/dev/null; sleep 1                           # graceful stop if it is our nginx
+  local pids; pids=$(listeners_443)
+  if [[ -n $pids ]]; then info "killing PID(s): $(echo $pids)"; sudo kill $pids 2>/dev/null; sleep 2; fi
+  pids=$(listeners_443)
+  if [[ -n $pids ]]; then sudo kill -9 $pids 2>/dev/null; sleep 1; fi
+  if [[ -z $(listeners_443) ]]; then ok "port 443 is free"
+  else bad "could not free port 443 (still used by PID $(echo $(listeners_443)))"; return 1; fi
+}
 
 check_nginx() {
   if ! command -v nginx >/dev/null 2>&1; then bad "nginx not installed: brew install nginx"; return; fi
@@ -23,16 +47,16 @@ check_nginx() {
     echo "  ${R}✘${N} installed nginx.conf is not the Phase 2 version"
     if ask "Install nginx-phase2.conf (with your team.env IPs), test it and reload nginx?"; then
       install_rendered "$tmp" "$NGINX_CONF"
-    else FAILED=$((FAILED + 1)); rm -f "$tmp"; return; fi
+    else bad "nginx.conf not installed (answered no)"; rm -f "$tmp"; return; fi
   fi
   rm -f "$tmp"
   if sudo nginx -t >/dev/null 2>&1; then ok "nginx -t: configuration is valid"
   else bad "nginx -t failed:"; sudo nginx -t; return; fi
-  if pgrep -x nginx >/dev/null; then sudo nginx -s reload && ok "nginx reloaded"
-  elif ask "nginx is not running. Start it?"; then sudo nginx && ok "nginx started"
-  else bad "nginx is not running"; return; fi
+  free_port_443 || return
+  if sudo nginx; then ok "nginx started fresh with the Phase 2 config"
+  else bad "nginx failed to start"; return; fi
   sleep 1
-  local code; code=$($CURL -s -o /dev/null -w '%{http_code}' --max-time 5 "https://$DOMAIN/api/status")
+  local code; code=$(curl --cacert "$CA_FILE" --resolve "$DOMAIN:443:127.0.0.1" -s -o /dev/null -w '%{http_code}' --max-time 5 "https://$DOMAIN/api/status")
   [[ $code == 200 ]] && ok "edge answers https://$DOMAIN/ with 200" || bad "edge answers https://$DOMAIN/ with '$code'"
 }
 
