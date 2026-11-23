@@ -1,0 +1,8 @@
+# Before: pf status
+# Machine: Mac 3 (Backend A + standby edge) (Soumyas-MacBook-Pro), en0 = 10.7.28.230
+# Time:    2026-11-23 13:01:46 IST
+
+$ sudo pfctl -s info | head -1
+No ALTQ support in kernel
+ALTQ related functions disabled
+Status: Disabled                              Debug: Urgent

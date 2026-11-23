@@ -1,0 +1,27 @@
+# Task C: Backend A listens on all interfaces and answers both endpoints
+# Machine: Mac 3 (Backend A + standby edge) (Soumyas-MacBook-Pro), en0 = 10.7.28.230
+# Time:    2026-11-23 12:46:33 IST
+
+$ lsof -nP -iTCP:3001 -sTCP:LISTEN; curl -s -i http://10.7.28.230:3001/; echo; curl -s -i http://10.7.28.230:3001/api/status
+COMMAND     PID         USER   FD   TYPE             DEVICE SIZE/OFF NODE NAME
+python3.1 85300 soumyatiwari    3u  IPv4 0xb7ec65b06ab33c87      0t0  TCP *:3001 (LISTEN)
+HTTP/1.0 200 OK
+Server: BaseHTTP/0.6 Python/3.12.4
+Date: Mon, 23 Nov 2026 07:16:33 GMT
+Content-Type: application/json
+Content-Length: 37
+X-Backend: A
+Cache-Control: max-age=60
+ETag: "af9f4284d53c1d88"
+
+{"backend": "A", "status": "running"}
+HTTP/1.0 200 OK
+Server: BaseHTTP/0.6 Python/3.12.4
+Date: Mon, 23 Nov 2026 07:16:33 GMT
+Content-Type: application/json
+Content-Length: 32
+X-Backend: A
+Cache-Control: max-age=60
+ETag: "d208bfa2f0ed4859"
+
+{"backend": "A", "status": "ok"}
