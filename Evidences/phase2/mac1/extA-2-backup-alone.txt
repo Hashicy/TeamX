@@ -1,0 +1,7 @@
+# Backup DNS (Mac 4) answers on its own
+# Machine: Mac 1 (primary DNS + client) (Manan), en0 = 10.7.31.159
+# Time:    2026-11-23 12:48:50 IST
+
+$ dig @10.7.15.199 app.teamX.test +noall +answer +stats | grep -E 'IN|SERVER'
+app.teamX.test.		30	IN	A	10.7.4.179
+;; SERVER: 10.7.15.199#53(10.7.15.199)

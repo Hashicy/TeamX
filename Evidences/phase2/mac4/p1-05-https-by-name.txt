@@ -1,0 +1,9 @@
+# Task E: second client opens the app by name over HTTPS, no -k
+# Machine: Mac 4 (Backend B + backup DNS + client) (Niharikas-MacBook-Pro-2), en0 = 10.7.15.199
+# Time:    2026-11-23 12:47:51 IST
+
+$ curl --cacert /Users/niha/cn-project/tls/rootCA.pem -s -i https://app.teamX.test/api/status | grep -i -E '^(HTTP|x-backend|cache-control|etag)'
+HTTP/2 200 
+x-backend: A
+etag: "d208bfa2f0ed4859"
+cache-control: max-age=60

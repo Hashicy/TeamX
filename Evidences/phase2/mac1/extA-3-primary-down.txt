@@ -1,0 +1,8 @@
+# Primary is down: dig to Mac 1 fails
+# Machine: Mac 1 (primary DNS + client) (Manan), en0 = 10.7.31.159
+# Time:    2026-11-23 12:48:51 IST
+
+$ dig @10.7.31.159 app.teamX.test +time=2 +tries=1 | tail -3
+; (1 server found)
+;; global options: +cmd
+;; connection timed out; no servers could be reached

@@ -1,0 +1,11 @@
+# Task C/D: X-Backend alternates A/B (by name, no IP, no -k)
+# Machine: Mac 1 (primary DNS + client) (Manan), en0 = 10.7.31.159
+# Time:    2026-11-23 11:54:01 IST
+
+$ for i in 1 2 3 4 5 6; do curl --cacert '/Users/mananbansal/cn-project/tls/rootCA.pem' -s -o /dev/null -D - https://app.teamX.test/api/status | grep -i -E '^(HTTP|x-backend)' | tr -d '\r' | paste -sd' ' -; done
+HTTP/2 200  x-backend: A
+HTTP/2 200  x-backend: B
+HTTP/2 200  x-backend: A
+HTTP/2 200  x-backend: B
+HTTP/2 200  x-backend: A
+HTTP/2 200  x-backend: B

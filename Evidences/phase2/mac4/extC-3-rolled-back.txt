@@ -1,0 +1,10 @@
+# Rollback: macOS default rules restored (pf was: Status: Disabled for 0 days 01:07:48          Debug: Urgent)
+# Machine: Mac 4 (Backend B + backup DNS + client) (Niharikas-MacBook-Pro-2), en0 = 10.7.15.199
+# Time:    2026-11-23 13:02:59 IST
+
+$ sudo pfctl -s info | head -1; echo 'Team X rules left:'; sudo pfctl -sr 2>/dev/null | grep -c 'port = 3002'
+No ALTQ support in kernel
+ALTQ related functions disabled
+Status: Disabled for 0 days 00:00:00          Debug: Urgent
+Team X rules left:
+0

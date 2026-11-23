@@ -1,0 +1,36 @@
+# Task G: DNS query/response (UDP 53, to the team DNS on Mac 4), TCP 3-way handshake + TLS + encrypted data (TCP 443, to the edge). Open the .pcap in Wireshark for the TLS ClientHello/ServerHello.
+# Machine: Mac 1 (primary DNS + client) (Manan), en0 = 10.7.31.159
+# Time:    2026-11-23 11:54:07 IST
+
+$ tcpdump -nn -r '/Users/mananbansal/Desktop/CN_Project/Evidences/phase2/mac1/p1-09-full-request.pcap' 2>/dev/null | head -40
+11:54:05.478716 IP 10.7.31.159.52723 > 10.7.15.199.53: 26072+ [1au] A? app.teamX.test. (43)
+11:54:05.552378 IP 10.7.15.199.53 > 10.7.31.159.52723: 26072* 1/0/1 A 10.7.8.191 (59)
+11:54:05.588179 IP 10.7.31.159.58446 > 10.7.8.191.443: Flags [SEW], seq 950382347, win 65535, options [mss 1460,nop,wscale 6,nop,nop,TS val 670248994 ecr 0,sackOK,eol], length 0
+11:54:05.652575 IP 10.7.8.191.443 > 10.7.31.159.58446: Flags [S.E], seq 392081474, ack 950382348, win 65535, options [mss 1460,nop,wscale 6,nop,nop,TS val 2097179097 ecr 670248994,sackOK,eol], length 0
+11:54:05.652815 IP 10.7.31.159.58446 > 10.7.8.191.443: Flags [.], ack 1, win 2059, options [nop,nop,TS val 670249059 ecr 2097179097], length 0
+11:54:05.653419 IP 10.7.31.159.58446 > 10.7.8.191.443: Flags [P.], seq 1:325, ack 1, win 2059, options [nop,nop,TS val 670249060 ecr 2097179097], length 324
+11:54:05.658331 IP 10.7.8.191.443 > 10.7.31.159.58446: Flags [.], ack 1, win 2059, options [nop,nop,TS val 2097179104 ecr 670249059], length 0
+11:54:05.658335 IP 10.7.8.191.443 > 10.7.31.159.58446: Flags [.], ack 325, win 2054, options [nop,nop,TS val 2097179104 ecr 670249060], length 0
+11:54:05.663337 IP 10.7.8.191.443 > 10.7.31.159.58446: Flags [.], seq 1:1449, ack 325, win 2054, options [nop,nop,TS val 2097179109 ecr 670249060], length 1448
+11:54:05.663341 IP 10.7.8.191.443 > 10.7.31.159.58446: Flags [P.], seq 1449:1755, ack 325, win 2054, options [nop,nop,TS val 2097179109 ecr 670249060], length 306
+11:54:05.663503 IP 10.7.31.159.58446 > 10.7.8.191.443: Flags [.], ack 1755, win 2032, options [nop,nop,TS val 670249070 ecr 2097179109], length 0
+11:54:05.665336 IP 10.7.31.159.58446 > 10.7.8.191.443: Flags [P.], seq 325:331, ack 1755, win 2048, options [nop,nop,TS val 670249072 ecr 2097179109], length 6
+11:54:05.665496 IP 10.7.31.159.58446 > 10.7.8.191.443: Flags [P.], seq 331:389, ack 1755, win 2048, options [nop,nop,TS val 670249072 ecr 2097179109], length 58
+11:54:05.665674 IP 10.7.31.159.58446 > 10.7.8.191.443: Flags [P.], seq 389:475, ack 1755, win 2048, options [nop,nop,TS val 670249072 ecr 2097179109], length 86
+11:54:05.665766 IP 10.7.31.159.58446 > 10.7.8.191.443: Flags [P.], seq 475:545, ack 1755, win 2048, options [nop,nop,TS val 670249072 ecr 2097179109], length 70
+11:54:05.670192 IP 10.7.8.191.443 > 10.7.31.159.58446: Flags [.], ack 331, win 2054, options [nop,nop,TS val 2097179115 ecr 670249072], length 0
+11:54:05.673347 IP 10.7.8.191.443 > 10.7.31.159.58446: Flags [.], ack 545, win 2051, options [nop,nop,TS val 2097179118 ecr 670249072], length 0
+11:54:05.673351 IP 10.7.8.191.443 > 10.7.31.159.58446: Flags [P.], seq 1755:2026, ack 545, win 2051, options [nop,nop,TS val 2097179118 ecr 670249072], length 271
+11:54:05.673354 IP 10.7.8.191.443 > 10.7.31.159.58446: Flags [P.], seq 2026:2297, ack 545, win 2051, options [nop,nop,TS val 2097179118 ecr 670249072], length 271
+11:54:05.673541 IP 10.7.31.159.58446 > 10.7.8.191.443: Flags [.], ack 2297, win 2040, options [nop,nop,TS val 670249080 ecr 2097179118], length 0
+11:54:05.674248 IP 10.7.8.191.443 > 10.7.31.159.58446: Flags [P.], seq 2297:2368, ack 545, win 2051, options [nop,nop,TS val 2097179119 ecr 670249072], length 71
+11:54:05.674409 IP 10.7.31.159.58446 > 10.7.8.191.443: Flags [.], ack 2368, win 2047, options [nop,nop,TS val 670249081 ecr 2097179119], length 0
+11:54:05.674667 IP 10.7.31.159.58446 > 10.7.8.191.443: Flags [P.], seq 545:576, ack 2368, win 2048, options [nop,nop,TS val 670249081 ecr 2097179119], length 31
+11:54:05.679907 IP 10.7.8.191.443 > 10.7.31.159.58446: Flags [.], ack 576, win 2051, options [nop,nop,TS val 2097179126 ecr 670249081], length 0
+11:54:05.830407 IP 10.7.8.191.443 > 10.7.31.159.58446: Flags [P.], seq 2368:2555, ack 576, win 2051, options [nop,nop,TS val 2097179274 ecr 670249081], length 187
+11:54:05.830580 IP 10.7.31.159.58446 > 10.7.8.191.443: Flags [.], ack 2555, win 2046, options [nop,nop,TS val 670249237 ecr 2097179274], length 0
+11:54:05.833805 IP 10.7.31.159.58446 > 10.7.8.191.443: Flags [P.], seq 576:600, ack 2555, win 2048, options [nop,nop,TS val 670249240 ecr 2097179274], length 24
+11:54:05.834060 IP 10.7.31.159.58446 > 10.7.8.191.443: Flags [F.], seq 600, ack 2555, win 2048, options [nop,nop,TS val 670249240 ecr 2097179274], length 0
+11:54:05.839331 IP 10.7.8.191.443 > 10.7.31.159.58446: Flags [.], ack 600, win 2051, options [nop,nop,TS val 2097179285 ecr 670249240], length 0
+11:54:05.839334 IP 10.7.8.191.443 > 10.7.31.159.58446: Flags [.], ack 601, win 2051, options [nop,nop,TS val 2097179285 ecr 670249240], length 0
+11:54:05.839821 IP 10.7.8.191.443 > 10.7.31.159.58446: Flags [R.], seq 2555, ack 601, win 2051, length 0

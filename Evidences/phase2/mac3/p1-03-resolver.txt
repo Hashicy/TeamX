@@ -1,0 +1,9 @@
+# Task B: Mac 3 is configured to use the team DNS
+# Machine: Mac 3 (Backend A + standby edge) (Soumyas-MacBook-Pro), en0 = 10.7.28.230
+# Time:    2026-11-23 12:46:33 IST
+
+$ networksetup -getdnsservers 'Wi-Fi'; scutil --dns | grep nameserver | sort -u
+10.7.31.159
+10.7.15.199
+  nameserver[0] : 10.7.31.159
+  nameserver[1] : 10.7.15.199

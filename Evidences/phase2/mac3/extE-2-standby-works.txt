@@ -1,0 +1,8 @@
+# Standby edge serves the app (tested before any DNS change)
+# Machine: Mac 3 (Backend A + standby edge) (Soumyas-MacBook-Pro), en0 = 10.7.28.230
+# Time:    2026-11-23 13:09:56 IST
+
+$ curl --cacert /Users/soumyatiwari/cn-project/tls/rootCA.pem -sI --resolve app.teamX.test:443:10.7.28.230 https://app.teamX.test/api/status | grep -i -E '^(HTTP|x-edge|x-backend)'
+HTTP/2 200 
+x-backend: A
+x-edge: mac3

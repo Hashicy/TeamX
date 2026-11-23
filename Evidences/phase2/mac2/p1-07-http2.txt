@@ -1,0 +1,6 @@
+# HTTP/2 negotiated through ALPN
+# Machine: Mac 2 (edge nginx) (Harshitas-MacBook-Pro-4), en0 = 10.7.4.179
+# Time:    2026-11-23 12:46:48 IST
+
+$ curl --cacert '/Users/harshita/Library/Application Support/mkcert/rootCA.pem' --resolve app.teamX.test:443:127.0.0.1 -sI --http2 https://app.teamX.test/ | head -1
+HTTP/2 200 

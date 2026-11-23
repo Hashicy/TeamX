@@ -1,0 +1,11 @@
+# Task E: the certificate nginx serves
+# Machine: Mac 2 (edge nginx) (Harshitas-MacBook-Pro-4), en0 = 10.7.4.179
+# Time:    2026-11-23 12:46:48 IST
+
+$ openssl x509 -in '/opt/homebrew/etc/nginx/certs/app.teamX.test.pem' -noout -subject -issuer -dates -ext subjectAltName
+subject=O=mkcert development certificate, OU=root@Harshitas-MacBook-Pro-4.local (System Administrator)
+issuer=O=mkcert development CA, OU=harshita@Harshitas-MacBook-Pro-4.local (Harshita Joshi), CN=mkcert harshita@Harshitas-MacBook-Pro-4.local (Harshita Joshi)
+notBefore=Sep 30 16:02:15 2026 GMT
+notAfter=Dec 30 16:02:15 2028 GMT
+X509v3 Subject Alternative Name: 
+    DNS:app.teamX.test, DNS:api.teamX.test

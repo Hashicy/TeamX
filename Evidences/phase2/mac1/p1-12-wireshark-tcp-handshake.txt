@@ -1,0 +1,110 @@
+# Task G: TCP three-way handshake (SYN, SYN-ACK, ACK) with ports and sequence numbers
+# Source: p1-09-full-request.pcap, exported with Wireshark 4.6.8 (tshark)
+
+$ tshark -r p1-09-full-request.pcap -Y 'frame.number>=3 && frame.number<=5' -O tcp
+Frame 3: Packet, 78 bytes on wire (624 bits), 78 bytes captured (624 bits)
+Ethernet II, Src: 36:5b:29:6a:40:c4 (36:5b:29:6a:40:c4), Dst: f6:fa:d2:fe:bc:09 (f6:fa:d2:fe:bc:09)
+Internet Protocol Version 4, Src: 10.7.31.159, Dst: 10.7.8.191
+Transmission Control Protocol, Src Port: 58446, Dst Port: 443, Seq: 0, Len: 0
+    Source Port: 58446
+    Destination Port: 443
+        ..0. .... = RST: Absent
+        ...0 .... = FIN: Absent
+        .... 0... = Data: Absent
+        .... .0.. = ACK: Absent
+        .... ..0. = SYN-ACK: Absent
+        .... ...0 = SYN: Absent
+    Sequence Number: 0    (relative sequence number)
+    Sequence Number (raw): 950382347
+    Acknowledgment Number: 0
+    Acknowledgment number (raw): 0
+    1011 .... = Header Length: 44 bytes (11)
+    Flags: 0x0c2 (SYN, ECE, CWR)
+        000. .... .... = Reserved: Not set
+        ...0 .... .... = Accurate ECN: Not set
+        .... 1... .... = Congestion Window Reduced: Set
+        .... .1.. .... = ECN-Echo: Set
+        .... ..0. .... = Urgent: Not set
+        .... ...0 .... = Acknowledgment: Not set
+        .... .... 0... = Push: Not set
+        .... .... .0.. = Reset: Not set
+        .... .... ..1. = Syn: Set
+        .... .... ...0 = Fin: Not set
+    Window: 65535
+    Checksum: 0xd400 [unverified]
+    Urgent Pointer: 0
+            MSS Value: 1460
+            Shift count: 6
+            Timestamp value: 670248994
+            Timestamp echo reply: 0
+
+Frame 4: Packet, 78 bytes on wire (624 bits), 78 bytes captured (624 bits)
+Ethernet II, Src: f6:fa:d2:fe:bc:09 (f6:fa:d2:fe:bc:09), Dst: 36:5b:29:6a:40:c4 (36:5b:29:6a:40:c4)
+Internet Protocol Version 4, Src: 10.7.8.191, Dst: 10.7.31.159
+Transmission Control Protocol, Src Port: 443, Dst Port: 58446, Seq: 0, Ack: 1, Len: 0
+    Source Port: 443
+    Destination Port: 58446
+        ..0. .... = RST: Absent
+        ...0 .... = FIN: Absent
+        .... 0... = Data: Absent
+        .... .0.. = ACK: Absent
+        .... ..0. = SYN-ACK: Absent
+        .... ...1 = SYN: Present
+    Sequence Number: 0    (relative sequence number)
+    Sequence Number (raw): 392081474
+    Acknowledgment Number: 1    (relative ack number)
+    Acknowledgment number (raw): 950382348
+    1011 .... = Header Length: 44 bytes (11)
+    Flags: 0x052 (SYN, ACK, ECE)
+        000. .... .... = Reserved: Not set
+        ...0 .... .... = Accurate ECN: Not set
+        .... 0... .... = Congestion Window Reduced: Not set
+        .... .1.. .... = ECN-Echo: Set
+        .... ..0. .... = Urgent: Not set
+        .... ...1 .... = Acknowledgment: Set
+        .... .... 0... = Push: Not set
+        .... .... .0.. = Reset: Not set
+        .... .... ..1. = Syn: Set
+        .... .... ...0 = Fin: Not set
+    Window: 65535
+    Checksum: 0x25f5 [unverified]
+    Urgent Pointer: 0
+            MSS Value: 1460
+            Shift count: 6
+            Timestamp value: 2097179097
+            Timestamp echo reply: 670248994
+
+Frame 5: Packet, 66 bytes on wire (528 bits), 66 bytes captured (528 bits)
+Ethernet II, Src: 36:5b:29:6a:40:c4 (36:5b:29:6a:40:c4), Dst: f6:fa:d2:fe:bc:09 (f6:fa:d2:fe:bc:09)
+Internet Protocol Version 4, Src: 10.7.31.159, Dst: 10.7.8.191
+Transmission Control Protocol, Src Port: 58446, Dst Port: 443, Seq: 1, Ack: 1, Len: 0
+    Source Port: 58446
+    Destination Port: 443
+        ..0. .... = RST: Absent
+        ...0 .... = FIN: Absent
+        .... 0... = Data: Absent
+        .... .0.. = ACK: Absent
+        .... ..1. = SYN-ACK: Present
+        .... ...1 = SYN: Present
+    Sequence Number: 1    (relative sequence number)
+    Sequence Number (raw): 950382348
+    Acknowledgment Number: 1    (relative ack number)
+    Acknowledgment number (raw): 392081475
+    1000 .... = Header Length: 32 bytes (8)
+    Flags: 0x010 (ACK)
+        000. .... .... = Reserved: Not set
+        ...0 .... .... = Accurate ECN: Not set
+        .... 0... .... = Congestion Window Reduced: Not set
+        .... .0.. .... = ECN-Echo: Not set
+        .... ..0. .... = Urgent: Not set
+        .... ...1 .... = Acknowledgment: Set
+        .... .... 0... = Push: Not set
+        .... .... .0.. = Reset: Not set
+        .... .... ..0. = Syn: Not set
+        .... .... ...0 = Fin: Not set
+    Window: 2059
+    Checksum: 0x5db9 [unverified]
+    Urgent Pointer: 0
+            Timestamp value: 670249059
+            Timestamp echo reply: 2097179097
+

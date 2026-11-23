@@ -1,0 +1,7 @@
+# After the TTL: this client also moves to the standby edge
+# Machine: Mac 1 (primary DNS + client) (Manan), en0 = 10.7.31.159
+# Time:    2026-11-23 13:11:15 IST
+
+$ curl --cacert '/Users/mananbansal/cn-project/tls/rootCA.pem' -sI https://app.teamX.test/api/status | grep -i -E '^(HTTP|x-edge)'
+HTTP/2 200 
+x-edge: mac3

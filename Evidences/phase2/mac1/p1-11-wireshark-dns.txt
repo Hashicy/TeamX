@@ -1,0 +1,91 @@
+# Task G: DNS query and response for app.teamX.test (UDP 53)
+# Source: p1-09-full-request.pcap, exported with Wireshark 4.6.8 (tshark)
+
+$ tshark -r p1-09-full-request.pcap -Y 'dns' -O dns
+Frame 1: Packet, 85 bytes on wire (680 bits), 85 bytes captured (680 bits)
+Ethernet II, Src: 36:5b:29:6a:40:c4 (36:5b:29:6a:40:c4), Dst: Apple_c1:78:91 (10:9f:41:c1:78:91)
+Internet Protocol Version 4, Src: 10.7.31.159, Dst: 10.7.15.199
+User Datagram Protocol, Src Port: 52723, Dst Port: 53
+Domain Name System (query)
+    Transaction ID: 0x65d8
+    Flags: 0x0120 Standard query
+        0... .... .... .... = Response: Message is a query
+        .000 0... .... .... = Opcode: Standard query (0)
+        .... ..0. .... .... = Truncated: Message is not truncated
+        .... ...1 .... .... = Recursion desired: Do query recursively
+        .... .... .0.. .... = Z: reserved (0)
+        .... .... ..1. .... = AD bit: Set
+        .... .... ...0 .... = Non-authenticated data: Unacceptable
+    Questions: 1
+    Answer RRs: 0
+    Authority RRs: 0
+    Additional RRs: 1
+    Queries
+        app.teamX.test: type A, class IN
+            Name: app.teamX.test
+            [Name Length: 14]
+            [Label Count: 3]
+            Type: A (1) (Host Address)
+            Class: IN (0x0001)
+    Additional records
+        <Root>: type OPT
+            Name: <Root>
+            Type: OPT (41) 
+            UDP payload size: 4096
+            Higher bits in extended RCODE: 0x00
+            EDNS0 version: 0
+            Z: 0x0000
+                0... .... .... .... = DO bit: Cannot handle DNSSEC security RRs
+                .000 0000 0000 0000 = Reserved: 0x0000
+            Data length: 0
+
+Frame 2: Packet, 101 bytes on wire (808 bits), 101 bytes captured (808 bits)
+Ethernet II, Src: Apple_c1:78:91 (10:9f:41:c1:78:91), Dst: 36:5b:29:6a:40:c4 (36:5b:29:6a:40:c4)
+Internet Protocol Version 4, Src: 10.7.15.199, Dst: 10.7.31.159
+User Datagram Protocol, Src Port: 53, Dst Port: 52723
+Domain Name System (response)
+    Transaction ID: 0x65d8
+    Flags: 0x8580 Standard query response, No error
+        1... .... .... .... = Response: Message is a response
+        .000 0... .... .... = Opcode: Standard query (0)
+        .... .1.. .... .... = Authoritative: Server is an authority for domain
+        .... ..0. .... .... = Truncated: Message is not truncated
+        .... ...1 .... .... = Recursion desired: Do query recursively
+        .... .... 1... .... = Recursion available: Server can do recursive queries
+        .... .... .0.. .... = Z: reserved (0)
+        .... .... ..0. .... = Answer authenticated: Answer/authority portion was not authenticated by the server
+        .... .... ...0 .... = Non-authenticated data: Unacceptable
+        .... .... .... 0000 = Reply code: No error (0)
+    Questions: 1
+    Answer RRs: 1
+    Authority RRs: 0
+    Additional RRs: 1
+    Queries
+        app.teamX.test: type A, class IN
+            Name: app.teamX.test
+            [Name Length: 14]
+            [Label Count: 3]
+            Type: A (1) (Host Address)
+            Class: IN (0x0001)
+    Answers
+        app.teamX.test: type A, class IN, addr 10.7.8.191
+            Name: app.teamX.test
+            Type: A (1) (Host Address)
+            Class: IN (0x0001)
+            Time to live: 30 (30 seconds)
+            Data length: 4
+            Address: 10.7.8.191
+    Additional records
+        <Root>: type OPT
+            Name: <Root>
+            Type: OPT (41) 
+            UDP payload size: 1232
+            Higher bits in extended RCODE: 0x00
+            EDNS0 version: 0
+            Z: 0x0000
+                0... .... .... .... = DO bit: Cannot handle DNSSEC security RRs
+                .000 0000 0000 0000 = Reserved: 0x0000
+            Data length: 0
+    [Request In: 1]
+    [Time: 73.662000 milliseconds]
+

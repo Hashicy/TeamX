@@ -1,0 +1,9 @@
+# Rules loaded: only 10.7.4.179 may connect to port 3001
+# Machine: Mac 3 (Backend A + standby edge) (Soumyas-MacBook-Pro), en0 = 10.7.28.230
+# Time:    2026-11-23 13:01:46 IST
+
+$ sudo pfctl -sr | grep -E 'port = 3001'
+No ALTQ support in kernel
+ALTQ related functions disabled
+pass in quick inet proto tcp from 10.7.4.179 to any port = 3001 flags S/SA keep state
+block return in quick proto tcp from any to any port = 3001

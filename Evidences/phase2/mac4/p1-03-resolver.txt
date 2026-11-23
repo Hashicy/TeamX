@@ -1,0 +1,9 @@
+# Task B: Mac 4 (second client) uses the team DNS
+# Machine: Mac 4 (Backend B + backup DNS + client) (Niharikas-MacBook-Pro-2), en0 = 10.7.15.199
+# Time:    2026-11-23 12:47:51 IST
+
+$ networksetup -getdnsservers 'Wi-Fi'; scutil --dns | grep nameserver | sort -u
+10.7.31.159
+10.7.15.199
+  nameserver[0] : 10.7.31.159
+  nameserver[1] : 10.7.15.199

@@ -1,0 +1,18 @@
+# Task F: response headers (Cache-Control, ETag)
+# Machine: Mac 1 (primary DNS + client) (Manan), en0 = 10.7.31.159
+# Time:    2026-11-23 11:54:02 IST
+
+$ curl --cacert '/Users/mananbansal/cn-project/tls/rootCA.pem' -I https://app.teamX.test/api/status
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0  0    32    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0
+HTTP/2 200 
+server: nginx/1.31.6
+date: Mon, 23 Nov 2026 06:24:02 GMT
+content-type: application/json
+content-length: 32
+x-backend: B
+etag: "3b7d18aba8a10926"
+cache-control: max-age=60
+x-edge: mac2
+
