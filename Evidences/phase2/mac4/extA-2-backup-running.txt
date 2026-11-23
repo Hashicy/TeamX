@@ -1,0 +1,11 @@
+# Backup dnsmasq is running and answering
+# Machine: Mac 4 (Backend B + backup DNS + client) (Niharikas-MacBook-Pro-2), en0 = 10.7.15.199
+# Time:    2026-11-23 12:48:34 IST
+
+$ pgrep -fl dnsmasq; dig @10.7.15.199 app.teamX.test +noall +answer
+35893 /opt/homebrew/sbin/dnsmasq -C /opt/homebrew/etc/dnsmasq.conf
+
+; <<>> DiG 9.10.6 <<>> @10.7.15.199 app.teamX.test +noall +answer
+; (1 server found)
+;; global options: +cmd
+app.teamX.test.		30	IN	A	10.7.4.179

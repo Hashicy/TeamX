@@ -1,0 +1,9 @@
+# Backup DNS has the same project records and TTL as the primary
+# Machine: Mac 4 (Backend B + backup DNS + client) (Niharikas-MacBook-Pro-2), en0 = 10.7.15.199
+# Time:    2026-11-23 12:48:34 IST
+
+$ grep -E '^(listen-address|address|local-ttl)' '/opt/homebrew/etc/dnsmasq.conf'
+listen-address=10.7.15.199
+address=/app.teamX.test/10.7.4.179
+address=/api.teamX.test/10.7.4.179
+local-ttl=30
