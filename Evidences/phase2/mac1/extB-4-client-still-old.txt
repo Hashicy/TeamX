@@ -1,0 +1,7 @@
+# …but the client still uses its CACHED old answer
+# Machine: Mac 1 (primary DNS + client) (Manan), en0 = 10.7.31.159
+# Time:    2026-11-23 12:58:22 IST
+
+$ echo "client (dscacheutil): $(dscacheutil -q host -a name app.teamX.test | awk '/ip_address/{print $2}')"; echo "client (ping):       $(ping -c 1 -t 1 app.teamX.test 2>/dev/null | head -1 | sed 's/.*(\(.*\)).*/\1/')"
+client (dscacheutil): 10.7.4.179
+client (ping):       10.7.4.179

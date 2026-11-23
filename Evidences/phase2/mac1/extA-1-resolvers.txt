@@ -1,0 +1,7 @@
+# Client lists primary and backup DNS
+# Machine: Mac 1 (primary DNS + client) (Manan), en0 = 10.7.31.159
+# Time:    2026-11-23 12:48:50 IST
+
+$ scutil --dns | grep nameserver | sort -u
+  nameserver[0] : 10.7.31.159
+  nameserver[1] : 10.7.15.199

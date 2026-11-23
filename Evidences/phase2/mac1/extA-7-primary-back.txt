@@ -1,0 +1,6 @@
+# Primary is back
+# Machine: Mac 1 (primary DNS + client) (Manan), en0 = 10.7.31.159
+# Time:    2026-11-23 12:48:57 IST
+
+$ dig @10.7.31.159 app.teamX.test +short
+10.7.4.179

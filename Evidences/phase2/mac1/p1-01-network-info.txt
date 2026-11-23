@@ -1,0 +1,17 @@
+# Task A: Mac 1 IP, mask, gateway, interface, MAC
+# Machine: Mac 1 (primary DNS + client) (Manan), en0 = 10.7.31.159
+# Time:    2026-11-23 11:53:55 IST
+
+$ networksetup -getinfo 'Wi-Fi'; echo; echo 'en0 MAC (on the wire):'; ifconfig en0 | grep ether
+DHCP Configuration
+IP address: 10.7.31.159
+Subnet mask: 255.255.224.0
+Router: 10.7.0.1
+Client ID: 
+IPv6: Automatic
+IPv6 IP address: none
+IPv6 Router: none
+Wi-Fi ID: 10:9f:41:c6:2a:22
+
+en0 MAC (on the wire):
+	ether 36:5b:29:6a:40:c4
