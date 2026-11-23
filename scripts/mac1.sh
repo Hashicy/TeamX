@@ -8,7 +8,7 @@ source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 ME="Mac 1 (primary DNS + client)"
 EVID_DIR="$REPO/Evidences/phase2/mac1"
 SECTIONS=(phase1 extA extB extC extD extE)
-CURL="curl --cacert $CA_FILE"
+CURL="curl --cacert '$CA_FILE'"   # quoted: the CA path may contain spaces
 LOOP6="for i in 1 2 3 4 5 6; do $CURL -s -o /dev/null -D - https://$DOMAIN/api/status | grep -i -E '^(HTTP|x-backend)' | tr -d '\r' | paste -sd' ' -; done"
 
 preflight() {
@@ -39,21 +39,27 @@ sec_phase1() {
     "$CURL -v -o /dev/null https://$DOMAIN/ 2>&1 | grep -E 'Connected to|SSL connection|ALPN|subject:|issuer:|subjectAltName|verify|HTTP/'"
   evidence p1-07-curl-I "Task F: response headers (Cache-Control, ETag)" "$CURL -I https://$DOMAIN/api/status"
   local i
-  for i in 1 2 3; do
-    evidence "p1-08-conditional-$i" "Task F: conditional request #$i: 304 from the backend that issued the ETag, 200 from the other" \
-      "ET=\$($CURL -sI https://$DOMAIN/api/status | awk 'tolower(\$1)==\"etag:\"{print \$2}' | tr -d '\r'); echo \"Sending If-None-Match: \$ET\"; $CURL -si -H \"If-None-Match: \$ET\" https://$DOMAIN/api/status | grep -i -E '^(HTTP|x-backend|etag|cache-control)'"
+  # Round-robin alternates A/B, so the conditional request is sent TWICE: one copy reaches the
+  # backend that issued the ETag (304 Not Modified), the other reaches the other backend (200, its own ETag).
+  for i in 1 2; do
+    evidence "p1-08-conditional-$i" "Task F: conditional requests #$i: 304 from the backend that issued the ETag, 200 from the other one" \
+      "H=\$($CURL -sI https://$DOMAIN/api/status | tr -d '\r'); ET=\$(echo \"\$H\" | awk 'tolower(\$1)==\"etag:\"{print \$2}'); echo \"First request: \$(echo \"\$H\" | grep -i '^x-backend') -> ETag \$ET\"; for n in 1 2; do echo; echo \"Conditional request \$n (If-None-Match: \$ET):\"; $CURL -si -H \"If-None-Match: \$ET\" https://$DOMAIN/api/status | grep -i -E '^(HTTP|x-backend|etag|cache-control)' | tr -d '\r'; done"
   done
 
   title "Task G: packet capture of one full request (DNS + TCP + TLS)"
   local pcap="$EVID_DIR/p1-09-full-request.pcap"
   mkdir -p "$EVID_DIR"
-  sudo tcpdump -i en0 -U -w "$pcap" "host $MAC1_IP and (port 53 or (host $MAC2_IP and port 443))" 2>/dev/null &
+  # Mac 1 is its own primary DNS, so its lookups go over loopback, not Wi-Fi. To get the DNS
+  # query/response on the wire, the lookup is sent to the team's backup DNS (Mac 4) over Wi-Fi.
+  # Only team traffic is captured (no background iCloud/8.8.8.8 lookups).
+  sudo tcpdump -i en0 -U -w "$pcap" "(host $MAC4_IP and udp port 53) or (host $MAC2_IP and tcp port 443)" 2>/dev/null &
   local tpid=$!
   sleep 2; flush_dns_cache
-  $CURL -s -o /dev/null "https://$DOMAIN/api/status"
+  dig @"$MAC4_IP" "$DOMAIN" +short >/dev/null
+  curl --cacert "$CA_FILE" -s -o /dev/null "https://$DOMAIN/api/status"
   sleep 2; sudo kill -INT "$tpid" 2>/dev/null; wait "$tpid" 2>/dev/null
   sudo chown "$USER" "$pcap"
-  evidence p1-09-full-request "Task G: DNS query/response, TCP 3-way handshake, TLS handshake, encrypted data (open the .pcap in Wireshark)" \
+  evidence p1-09-full-request "Task G: DNS query/response (UDP 53, to the team DNS on Mac 4), TCP 3-way handshake + TLS + encrypted data (TCP 443, to the edge). Open the .pcap in Wireshark for the TLS ClientHello/ServerHello." \
     "tcpdump -nn -r '$pcap' 2>/dev/null | head -40"
 }
 
@@ -75,23 +81,53 @@ sec_extA() {
 
 sec_extB() {
   title "Extension B: TTL and a controlled record change"
+  # What each DNS server answers, and what THIS client (macOS resolver cache) currently uses
+  local SERVERS="echo \"primary DNS (Mac 1): \$(dig @$MAC1_IP $DOMAIN +short)\"; echo \"backup  DNS (Mac 4): \$(dig @$MAC4_IP $DOMAIN +short)\""
+  local CLIENT="echo \"client (dscacheutil): \$(dscacheutil -q host -a name $DOMAIN | awk '/ip_address/{print \$2}')\"; echo \"client (ping):       \$(ping -c 1 -t 1 $DOMAIN 2>/dev/null | head -1 | sed 's/.*(\\(.*\\)).*/\\1/')\""
+  client_ip() { ping -c 1 -t 1 "$DOMAIN" 2>/dev/null | head -1 | sed 's/.*(\(.*\)).*/\1/'; }
+  # wait_for_client <ip> <max-seconds>: poll the client every 5 s; prints seconds waited, returns 1 on timeout
+  wait_for_client() {
+    local t=0
+    while [[ $(client_ip) != "$1" ]]; do
+      ((t >= $2)) && { echo "$t"; return 1; }
+      printf "\r  ${Y}⏳${N} client still on %s after %3ds (TTL is 30 s)… " "$(client_ip)" "$t" >&2; sleep 5; t=$((t + 5))
+    done; printf "\r%60s\r" "" >&2; echo "$t"
+  }
+  backup_to() {  # make sure Niharika's backup answers <ip> before continuing
+    until [[ $(dig_a "$MAC4_IP") == "$1" ]]; do
+      pause "Niharika on Mac 4: run  ./scripts/mac4.sh dns-point $1   (backup now answers '$(dig_a "$MAC4_IP")')"
+    done; ok "backup DNS (Mac 4) answers $1"
+  }
+
   evidence extB-1-ttl "Record TTL is now 30 s (was 0 in Phase 1)" "dig $DOMAIN +noall +answer"
-  pause "Niharika on Mac 4: run  ./scripts/mac4.sh dns-point $MAC3_IP"
+
+  # --- Part 1: the client keeps its cached answer until it expires ---
+  backup_to "$MAC3_IP"
   flush_dns_cache
-  evidence extB-2-client-caches "Client resolves and caches the CURRENT answer" "dscacheutil -q host -a name $DOMAIN"
-  info "Changing the record on this Mac (primary) to $MAC3_IP…"
+  evidence extB-2-client-caches "Client resolves and caches the CURRENT answer" "$SERVERS; $CLIENT"
+  local t0=$SECONDS
+  info "Changing the record on this Mac (primary) to ${MAC3_IP}…"
   dns_point "$MAC3_IP"
-  evidence extB-3-server-new "The DNS server already gives the NEW answer" "dig @$MAC1_IP $DOMAIN +short"
-  evidence extB-4-client-still-old "…but the client still uses its CACHED old answer" "dscacheutil -q host -a name $DOMAIN"
-  countdown 32 "waiting for the 30 s TTL to expire"
-  evidence extB-5-client-new-after-ttl "After the TTL, the client picks up the new answer" "dscacheutil -q host -a name $DOMAIN"
+  evidence extB-3-server-new "Both DNS servers now give the NEW answer" "$SERVERS"
+  evidence extB-4-client-still-old "…but the client still uses its CACHED old answer" "$CLIENT"
+  local waited
+  if waited=$(wait_for_client "$MAC3_IP" 90); then
+    evidence extB-5-client-new-after-ttl "Client switched to the new answer about $((SECONDS - t0)) s after caching it (record TTL 30 s)" "$SERVERS; $CLIENT"
+  else
+    evidence extB-5-client-new-after-ttl "Client was STILL on its cached answer $((SECONDS - t0)) s after caching it: macOS kept the entry longer than the 30 s TTL" "$SERVERS; $CLIENT"
+    flush_dns_cache
+    evidence extB-5b-flush "Manual cache flush: the client picks up the new answer immediately" \
+      "echo '(ran: sudo dscacheutil -flushcache; sudo killall -HUP mDNSResponder)'; $CLIENT"
+  fi
+
+  # --- Part 2: put the record back, then show that a flush makes the change visible at once ---
+  backup_to "$MAC2_IP"
   info "Reverting the record on this Mac to the edge ($MAC2_IP)…"
   dns_point "$MAC2_IP"
-  evidence extB-6-client-cached-again "Record reverted; client still has the cached answer" "dscacheutil -q host -a name $DOMAIN"
+  evidence extB-6-client-cached-again "Both servers reverted; the client still has the now-outdated cached answer" "$SERVERS; $CLIENT"
   flush_dns_cache
   evidence extB-7-after-flush "Manual cache flush: the change is visible immediately" \
-    "echo '(ran: sudo dscacheutil -flushcache; sudo killall -HUP mDNSResponder)'; dscacheutil -q host -a name $DOMAIN"
-  pause "Niharika on Mac 4: run  ./scripts/mac4.sh dns-point $MAC2_IP"
+    "echo '(ran: sudo dscacheutil -flushcache; sudo killall -HUP mDNSResponder)'; $CLIENT"
 }
 
 sec_extC() {

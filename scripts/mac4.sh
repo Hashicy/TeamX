@@ -11,7 +11,7 @@ EVID_DIR="$REPO/Evidences/phase2/mac4"
 SECTIONS=(phase1 extA extC extE)
 PORT=3002
 PF_RULES="$PHASE2/pf-isolation-mac4.conf"
-CURL="curl --cacert $CA_FILE"
+CURL="curl --cacert '$CA_FILE'"   # quoted: the CA path may contain spaces
 
 preflight() {
   title "Preflight: $ME"

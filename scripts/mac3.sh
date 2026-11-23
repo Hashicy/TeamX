@@ -72,10 +72,10 @@ sec_extE() {
   render "$PHASE2/nginx-phase2.conf" | sed 's/X-Edge "mac2"/X-Edge "mac3"/' > "$tmp"
   install_rendered "$tmp" "$NGINX_CONF"; rm -f "$tmp"
   evidence extE-1-nginx-t "Standby edge: same config as Mac 2 (only X-Edge differs)" "sudo nginx -t"
-  if pgrep -x nginx >/dev/null; then sudo nginx -s reload; else sudo nginx; fi
+  if nginx_running; then sudo nginx -s reload; else sudo nginx; fi
   sleep 1
   evidence extE-2-standby-works "Standby edge serves the app (tested before any DNS change)" \
-    "curl --cacert $CA_FILE -sI --resolve $DOMAIN:443:$MAC3_IP https://$DOMAIN/api/status | grep -i -E '^(HTTP|x-edge|x-backend)'"
+    "curl --cacert '$CA_FILE' -sI --resolve $DOMAIN:443:$MAC3_IP https://$DOMAIN/api/status | grep -i -E '^(HTTP|x-edge|x-backend)'"
   echo; echo "  ${G}${B}Standby edge is UP.${N} Tell Manan to continue."
   pause "Press Enter when Manan says to stop the standby edge"
   sudo nginx -s stop && ok "standby edge stopped"

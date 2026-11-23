@@ -14,9 +14,12 @@ bad()   { echo "  ${R}✘${N} $*"; FAILED=$((FAILED + 1)); }
 info()  { echo "  ${Y}→${N} $*"; }
 title() { echo; echo "${B}━━ $* ━━${N}"; }
 pause() { echo; read -r -p "${Y}⏸  $*  [press Enter when done]${N} " _; }
-ask()   { local a; read -r -p "  ${Y}?${N} $* [y/N] " a; [[ $a == [yY]* ]]; }
+ask()   { local a; while read -r -t 1 -n 1000 _; do :; done; read -r -p "  ${Y}?${N} $* [y/N] " a; [[ $a == [yY]* ]]; }
 
 my_ip() { ipconfig getifaddr en0 2>/dev/null; }
+
+# dig_a <server> : the A record for $DOMAIN from <server>, or empty (never error text)
+dig_a() { dig @"$1" "$DOMAIN" +short +time=2 +tries=1 2>/dev/null | grep -E '^[0-9]+(\.[0-9]+){3}$' | head -1; }
 
 # ---------------------------------------------------------------------------
 # Evidence: run a command, show it live, and save command + output with a
@@ -112,6 +115,9 @@ check_resolvers() {
   have=$(networksetup -getdnsservers "$WIFI_SERVICE" 2>/dev/null | tr '\n' ' ' | sed 's/ *$//')
   if [[ $have == "$want" ]]; then ok "DNS servers are $want (primary, backup)"; return; fi
   echo "  ${R}✘${N} DNS servers are '${have}', should be '$want'"
+  if [[ -z $(dig_a "$MAC1_IP") && -z $(dig_a "$MAC4_IP") ]]; then
+    bad "not switching DNS servers: neither team DNS server answers yet (this Mac would lose all name lookups)"; return
+  fi
   if ask "Set this Mac's DNS servers to $want now?"; then
     sudo networksetup -setdnsservers "$WIFI_SERVICE" $want && flush_dns_cache && ok "DNS servers set to $want"
   else FAILED=$((FAILED + 1)); fi
@@ -142,16 +148,19 @@ check_dnsmasq() {  # check_dnsmasq <repo-config> <my-ip>
     echo "  ${R}✘${N} installed dnsmasq.conf is not the Phase 2 version"
     if ask "Install $(basename "$1") (with your team.env IPs) and restart dnsmasq?"; then
       install_rendered "$tmp" "$DNSMASQ_CONF"; dnsmasq_restart
-    else FAILED=$((FAILED + 1)); rm -f "$tmp"; return; fi
+    else bad "dnsmasq config not installed (answered no)"; rm -f "$tmp"; return; fi
   fi
   rm -f "$tmp"
   if ! pgrep -x dnsmasq >/dev/null; then
     if ask "dnsmasq is not running. Start it?"; then dnsmasq_start; else bad "dnsmasq is not running"; return; fi
   fi
-  local ans; ans=$(dig @"$2" "$DOMAIN" +short +time=2 +tries=1 2>/dev/null)
+  local ans; ans=$(dig_a "$2")
   if [[ $ans == "$MAC2_IP" ]]; then ok "dnsmasq on this Mac answers $DOMAIN -> $MAC2_IP"
   else bad "dnsmasq on this Mac answers '$ans' for $DOMAIN (expected $MAC2_IP)"; fi
 }
+
+# nginx is "running" if an nginx process is listening on TCP 443 (more reliable than pgrep)
+nginx_running() { sudo lsof -nP -iTCP:443 -sTCP:LISTEN 2>/dev/null | awk 'NR > 1 {print $1}' | grep -qx nginx; }
 
 dnsmasq_start()   { sudo "$DNSMASQ_BIN" -C "$DNSMASQ_CONF"; sleep 1; }
 dnsmasq_stop()    { sudo pkill -x dnsmasq; sleep 1; }
@@ -161,7 +170,7 @@ dnsmasq_restart() { dnsmasq_stop; dnsmasq_start; }
 dns_point() {
   sudo sed -i '' -E "s#^address=/(app|api)\.teamX\.test/.*#address=/\1.teamX.test/$1#" "$DNSMASQ_CONF"
   dnsmasq_restart
-  info "this Mac's DNS now answers $DOMAIN -> $(dig @"$(my_ip)" "$DOMAIN" +short +time=2 +tries=1)"
+  info "this Mac's DNS now answers $DOMAIN -> $(dig_a "$(my_ip)")"
 }
 
 # Remote-service checks (only report; the owner fixes on their Mac)
@@ -179,7 +188,7 @@ check_edge() {
 }
 
 check_remote_dns() {  # check_remote_dns <name> <ip>
-  local ans; ans=$(dig @"$2" "$DOMAIN" +short +time=2 +tries=1 2>/dev/null)
+  local ans; ans=$(dig_a "$2")
   if [[ $ans == "$MAC2_IP" ]]; then ok "$1 DNS ($2) answers $DOMAIN -> $MAC2_IP"
   else bad "$1 DNS ($2) answers '${ans:-nothing}' (expected $MAC2_IP)"; fi
 }
